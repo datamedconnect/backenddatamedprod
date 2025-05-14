@@ -9,6 +9,7 @@ const logsSchema = new mongoose.Schema(
         "LOGIN", // User login
         "LOGOUT", // User logout
         "SLOT_CREATION", // Slot creation
+        "SLOT_READ", // Slot creation
         "SLOT_UPDATE", // Slot status or details update
         "SLOT_DELETION", // Slot deletion
         "CONSULTANT_CREATION", // Consultant creation
@@ -19,6 +20,7 @@ const logsSchema = new mongoose.Schema(
         "USER_CREATION", // User account creation
         "USER_UPDATE", // User profile update
         "INTEGRATION_ADDED", // Adding a service integration (e.g., Google)
+        "CONSULTANT_READ", // Fetching qualified consultants
       ],
     },
     user: {

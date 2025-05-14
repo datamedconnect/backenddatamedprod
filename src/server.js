@@ -23,7 +23,7 @@ app.use(
     origin: [
       "https://datamedconnect.com",
       "https://admin.datamedconnect.com",
-      "http://localhost:3000",
+      "http://localhost:3001",
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
