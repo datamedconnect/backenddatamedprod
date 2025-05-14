@@ -22,7 +22,22 @@
   },
   "homepage": "https://github.com/datamedconnect/backenddatamedprod#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "axios": "^1.9.0",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "fs": "^0.0.1-security",
+    "fuzzball": "^2.2.2",
+    "googleapis": "^148.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.14.3",
+    "multer": "^1.4.5-lts.2",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.3",
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
