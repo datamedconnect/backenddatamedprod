@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     enum: ["client", "admin", "superadmin"],
   },
+  phoneNumber: { type: String },
   name: { type: String },
   companyName: { type: String },
   integrations: [
