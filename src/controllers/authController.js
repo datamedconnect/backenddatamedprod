@@ -103,49 +103,31 @@ const login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Adresse e-mail non trouvée" });
     }
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Mot de passe incorrect" });
     }
-
-    // Create the payload with required fields
-    const payload = {
-      id: user._id,
-      role: user.role,
-      email: user.email,
-    };
-
-    // Conditionally add companyName if it exists
-    if (user.companyName) {
-      payload.companyName = user.companyName;
-    }
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "8h",
-    });
-
-    // Log successful login
+    // Token generation and response logic...
+    const payload = { id: user._id, role: user.role, email: user.email };
+    if (user.companyName) payload.companyName = user.companyName;
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
     await Logs.create({
       actionType: "LOGIN",
       user: user._id,
       description: `User with email ${email} logged in successfully`,
       metadata: { ipAddress: req.ip || "unknown" },
     });
-
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 8 * 60 * 60 * 1000, // 8 hours
+      maxAge: 8 * 60 * 60 * 1000,
     });
-
-    // Include token in the response body
     res.json({ token, role: user.role });
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur de connexion:", error);
+    res.status(500).json({ message: "Erreur du serveur, veuillez réessayer plus tard" });
   }
 };
 
