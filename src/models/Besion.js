@@ -13,19 +13,6 @@ const besionSchema = new mongoose.Schema(
     nomClient: {
       type: String,
       required: false,
-      enum: [
-        "inetum",
-        "Hitechpros",
-        "Deloitte",
-        "sncf",
-        "EY",
-        "Macif",
-        "Capgemini",
-        "Open",
-        "Societe_Generale",
-        "Orange Business Services",
-        "P&V"
-      ],
     },
     dateLimite: {
       type: Date,

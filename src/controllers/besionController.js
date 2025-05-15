@@ -56,34 +56,32 @@ const createbesion = async (req, res) => {
 
 const createbesionClient = async (req, res) => {
   try {
+    console.log("Received request to create Besion");
     const userId = req.user.id;
+    console.log("User ID:", userId);
     if (!userId) {
+      console.log("Unauthorized: User not authenticated");
       return res
         .status(401)
         .json({ message: "Unauthorized: User not authenticated" });
     }
 
-    // Fetch user details and verify role
+    console.log("Fetching user from database");
     const user = await User.findById(userId);
     if (!user) {
+      console.log("User not found");
       return res.status(404).json({ message: "User not found" });
     }
+    console.log("User found:", user);
     if (user.role !== "client") {
+      console.log("Forbidden: Insufficient permissions");
       return res
         .status(403)
         .json({ message: "Forbidden: Insufficient permissions" });
     }
 
-    // Get companyName from user to set as nomClient
-    const companyName = user.companyName;
-    console.log("User companyName:", companyName);
-    if (!companyName) {
-      return res
-        .status(400)
-        .json({ message: "User does not have a company name" });
-    }
-
-    // Extract and validate other fields from request body
+    const companyName = user.companyName || "Unknown Client";
+    console.log("Company name:", companyName);
     const {
       dateLimite,
       poste,
@@ -92,45 +90,71 @@ const createbesionClient = async (req, res) => {
       prixAchat,
       status = "Ouvert",
     } = req.body;
-    if (!dateLimite || !poste || !experience || !mission || !prixAchat) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    // Create new Besion document
-    const newBesion = new Besion({
-      createdBy: userId,
-      nomClient: companyName,
+    console.log("Besion data:", {
       dateLimite,
       poste,
       experience,
       mission,
       prixAchat,
       status,
+    });
+
+    if (!dateLimite || !poste || !experience || !mission || !prixAchat) {
+      console.log("Missing required fields");
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+    if (isNaN(Number(experience)) || isNaN(Number(prixAchat))) {
+      console.log("Invalid experience or prixAchat");
+      return res
+        .status(400)
+        .json({ message: "Experience and prixAchat must be numbers" });
+    }
+
+    console.log("Creating new Besion");
+    const newBesion = new Besion({
+      createdBy: userId,
+      nomClient: companyName,
+      dateLimite,
+      poste,
+      experience: Number(experience),
+      mission,
+      prixAchat: Number(prixAchat),
+      status,
       consultantsScores: [],
     });
-    console.log("Before save - newBesion:", newBesion);
 
-    // Save to database
+    console.log("Saving Besion to database");
     await newBesion.save();
-    console.log("After save - newBesion:", newBesion);
+    console.log("Besion saved successfully");
 
-    // Log Besion creation
-    await Logs.create({
-      actionType: "BESION_CREATION",
-      user: userId,
-      description: `Besion created for client ${companyName}`,
-      relatedEntity: { entityType: "Besion", entityId: newBesion._id },
-      metadata: { nomClient: companyName, poste, prixAchat: prixAchat.toString() },
-    });
+    try {
+      console.log("Creating log entry");
+      await Logs.create({
+        actionType: "BESION_CREATION",
+        user: userId,
+        description: `Besion created for client ${companyName}`,
+        relatedEntity: { entityType: "Besion", entityId: newBesion._id },
+        metadata: {
+          nomClient: companyName,
+          poste,
+          prixAchat: prixAchat.toString(),
+        },
+      });
+      console.log("Log entry created successfully");
+    } catch (logError) {
+      console.error("Error logging Besion creation:", logError.message);
+    }
 
-    // Return success response
+    console.log("Returning success response");
     res.status(201).json({
       message: "Besion created successfully",
       besion: newBesion,
     });
   } catch (error) {
-    console.error("Error creating Besion:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error creating Besion:", error.message, error.stack);
+    res
+      .status(500)
+      .json({ message: "Internal server error", details: error.message });
   }
 };
 
