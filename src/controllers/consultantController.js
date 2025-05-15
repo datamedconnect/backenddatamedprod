@@ -194,6 +194,148 @@ const getAllConsultantsAdmin = async (req, res) => {
   }
 };
 
+// const createConsultantAdmin = async (req, res) => {
+//   try {
+//     // Log the entry point
+//     console.log("Step 1: Entering createConsultantAdmin");
+
+//     // Log all incoming request details
+//     console.log(
+//       "Step 2: Request Headers:",
+//       JSON.stringify(req.headers, null, 2)
+//     );
+//     console.log(
+//       "Step 3: Request Body (raw):",
+//       req.body ? JSON.stringify(req.body, null, 2) : "undefined"
+//     );
+//     console.log(
+//       "Step 4: Request File:",
+//       req.file
+//         ? {
+//             fieldname: req.file.fieldname,
+//             originalname: req.file.originalname,
+//             size: req.file.size,
+//             mimetype: req.file.mimetype,
+//           }
+//         : "No file received"
+//     );
+
+//     // Check if Multer processed the file correctly
+//     if (!req.file) {
+//       console.log(
+//         "Step 5: No file detected - potential Multer configuration issue"
+//       );
+//       return res.status(400).json({ message: "No PDF file uploaded" });
+//     }
+
+//     // Verify the field name matches expectation
+//     if (req.file.fieldname !== "pdffile") {
+//       console.log(
+//         `Step 6: Field name mismatch - Expected: "pdffile", Received: "${req.file.fieldname}"`
+//       );
+//       return res.status(400).json({
+//         message: `Unexpected field name: "${req.file.fieldname}". Expected "pdffile".`,
+//       });
+//     }
+
+//     // Log extracted fields
+//     console.log("Step 7: Extracting request body fields");
+//     const { email, phone, missionType, tjmOrSalary, location, age } =
+//       req.body || {};
+//     console.log("Step 8: Extracted Fields:", {
+//       email,
+//       phone,
+//       missionType,
+//       tjmOrSalary,
+//       location,
+//       age,
+//     });
+
+//     // Validate required fields
+//     if (!email || !phone) {
+//       console.log("Step 9: Validation failed - Missing email or phone");
+//       return res.status(400).json({ message: "Email and phone are required" });
+//     }
+
+//     // Proceed with profile creation
+//     console.log("Step 10: Creating default profile");
+//     const defaultProfileData = {
+//       Name: "Not Specified",
+//       Poste: ["Not Specified"],
+//       Location: location || "Not Specified",
+//       AnnéeExperience: 0,
+//       Skills: [],
+//       ExperienceProfessionnelle: [],
+//       Langue: [],
+//       Formation: [],
+//       Certifications: [],
+//     };
+//     const profile = await profileService.createProfile(defaultProfileData);
+//     console.log("Step 11: Profile created:", profile._id);
+
+//     // Create consultant
+//     console.log("Step 12: Creating consultant");
+//     const consultantData = {
+//       Email: email,
+//       Phone: phone,
+//       MissionType: missionType || "Not Specified",
+//       Age: age ? parseInt(age, 10) : 0,
+//       TjmOrSalary: tjmOrSalary || "Not Specified",
+//       Location: location || "Not Specified",
+//       Profile: profile._id,
+//     };
+//     const consultant = await consultantService.createConsultant(consultantData);
+//     console.log("Step 13: Consultant created:", consultant._id);
+
+//     // Handle PDF processing
+//     console.log("Step 14: Processing PDF file");
+//     if (req.file) {
+//       if (req.file.size > 50 * 1024 * 1024) {
+//         console.log("Step 15: File size exceeds 50MB limit");
+//         return res
+//           .status(400)
+//           .json({ message: "File too large. Maximum size is 50MB." });
+//       }
+
+//       const pdfText = await extractTextFromPDF(req.file.buffer);
+//       console.log("Step 16: PDF text extracted, length:", pdfText.length);
+
+//       const cvDataString = await grokService.extractCVData(pdfText);
+//       console.log("Step 17: CV data extracted from Grok:", cvDataString);
+
+//       if (!cvDataString || typeof cvDataString !== "string") {
+//         console.log("Step 18: Invalid CV data from Grok");
+//         throw new Error("Invalid CV data returned from Grok service");
+//       }
+//       const cvData = JSON.parse(cvDataString);
+//       console.log("Step 19: CV data parsed:", JSON.stringify(cvData, null, 2));
+
+//       const profileData = { ...cvData, consultantId: consultant._id };
+//       await profileService.updateProfile(profile._id, profileData);
+//       console.log("Step 20: Profile updated with CV data");
+
+//       return res.status(201).json({
+//         consultant,
+//         profile,
+//         message: "Consultant created and CV processed successfully",
+//       });
+//     }
+
+//     // Success without PDF
+//     console.log("Step 21: Returning response without PDF processing");
+//     return res.status(201).json({
+//       consultant,
+//       profile,
+//       message: "Consultant created successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error in createConsultantAdmin:", error.stack);
+//     return res
+//       .status(500)
+//       .json({ message: "Error processing request: " + error.message });
+//   }
+// };
+
 const createConsultantAdmin = async (req, res) => {
   try {
     // Log the entry point
@@ -307,7 +449,15 @@ const createConsultantAdmin = async (req, res) => {
         console.log("Step 18: Invalid CV data from Grok");
         throw new Error("Invalid CV data returned from Grok service");
       }
-      const cvData = JSON.parse(cvDataString);
+
+      // Clean the cvDataString to extract only the JSON object
+      const jsonMatch = cvDataString.match(/```json\n([\s\S]*?)\n```/);
+      const cleanedCvDataString = jsonMatch
+        ? jsonMatch[1].trim()
+        : cvDataString.replace(/```json\n?/, '').replace(/\n?```/, '').trim();
+      console.log("Step 18.5: Cleaned CV data string:", cleanedCvDataString);
+
+      const cvData = JSON.parse(cleanedCvDataString);
       console.log("Step 19: CV data parsed:", JSON.stringify(cvData, null, 2));
 
       const profileData = { ...cvData, consultantId: consultant._id };

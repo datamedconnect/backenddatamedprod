@@ -4,6 +4,8 @@ const { authenticate, isSuper } = require("../middleware/auth");
 const superController = require("../controllers/superController");
 const slotController = require("../controllers/slotController");
 const consultantController = require("../controllers/consultantController");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Get all logs
 router.get("/getSuper", authenticate, isSuper, superController.getAllLogs);
@@ -50,4 +52,26 @@ router.put(
   isSuper,
   consultantController.updateConsultantStatus
 );
+
+router.post(
+  "/consultants",
+  authenticate,
+  isSuper,
+  upload.single("pdffile"),
+  consultantController.createConsultantAdmin
+);
+
+router.put(
+  "/consultants/:id/details",
+  authenticate,
+  isSuper,
+  consultantController.updateConsultantDetails
+);
+router.put(
+  "/consultants/:id/status", 
+  authenticate,
+  isSuper,
+  consultantController.updateConsultantStatus
+);
+
 module.exports = router;
