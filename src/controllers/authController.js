@@ -105,6 +105,10 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Adresse e-mail non trouvée" });
     }
+    // Check if the user's status is "Activé"
+    if (user.status !== "Activé") {
+      return res.status(401).json({ message: "Adresse e-mail non trouvée" });
+    }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Mot de passe incorrect" });
@@ -130,5 +134,4 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Erreur du serveur, veuillez réessayer plus tard" });
   }
 };
-
 module.exports = { signup, login };

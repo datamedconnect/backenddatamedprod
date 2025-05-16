@@ -1,11 +1,29 @@
-const Logs = require("../models/Logs"); // Adjust the path to your Logs model
-const User = require("../models/User"); // Adjust the path to your User model
+const Logs = require("../models/Logs");
+const User = require("../models/User");
+const Consultant = require("../models/Consultant");
+const Besion = require("../models/Besion");
+const Slot = require("../models/Slots");
 
 const getAllLogs = async (req, res) => {
   try {
-    const logs = await Logs.find()
-      .populate("user", "email") // Populate the user's email
-      .sort({ createdAt: -1 }); // Sort by timestamp, newest first
+    const { date } = req.query;
+    let logs;
+    if (date) {
+      // Parse the date and create start and end of the day
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+      logs = await Logs.find({
+        createdAt: { $gte: start, $lte: end },
+      })
+        .populate("user", "email")
+        .sort({ createdAt: -1 });
+    } else {
+      logs = await Logs.find()
+        .populate("user", "email")
+        .sort({ createdAt: -1 });
+    }
     res.json(logs);
   } catch (error) {
     console.error("Error fetching logs:", error);
@@ -16,7 +34,7 @@ const getAllLogs = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select(
-      "email role name companyName phoneNumber createdAt"
+      "email role name companyName createdAt status" // Include status
     );
     res.json(users);
   } catch (error) {
@@ -28,7 +46,6 @@ const getAllUsers = async (req, res) => {
 const createUser = async (req, res) => {
   const { email, password, role, name, companyName, phoneNumber } = req.body;
 
-  // Basic input validation
   if (!email || !password || !role) {
     return res
       .status(400)
@@ -46,21 +63,21 @@ const createUser = async (req, res) => {
     });
     await user.save();
 
-    // Return user data without password
     const userData = {
       _id: user._id,
       email: user.email,
       role: user.role,
       name: user.name,
       companyName: user.companyName,
-      phoneNumber: user.phoneNumber,
-      createdAt: user.createdAt,
+      status: user.status, // Add this
     };
-    res.status(201).json(userData);
+    res.json(userData);
   } catch (error) {
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({ message: "Validation error", errors: messages });
+      return res
+        .status(400)
+        .json({ message: "Validation error", errors: messages });
     } else if (error.code === 11000) {
       return res.status(400).json({ message: "Email already in use" });
     } else {
@@ -72,30 +89,29 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { email, role, name, companyName, phoneNumber } = req.body;
-
+  const updateData = req.body; // Contains status from frontend
   try {
-    const user = await User.findByIdAndUpdate(
-      id,
-      { email, role, name, companyName, phoneNumber },
-      { new: true, runValidators: true } // Return updated document and validate
-    );
+    const user = await User.findByIdAndUpdate(id, updateData, { new: true });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    // Include status in the response
     res.json({
       _id: user._id,
       email: user.email,
       role: user.role,
       name: user.name,
       companyName: user.companyName,
-      phoneNumber: user.phoneNumber,
+      status: user.status, // Add this
       createdAt: user.createdAt,
     });
   } catch (error) {
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({ message: "Validation error", errors: messages });
+      console.log("Validation error details:", messages); // Log validation errors
+      return res
+        .status(400)
+        .json({ message: "Validation error", errors: messages });
     } else if (error.code === 11000) {
       return res.status(400).json({ message: "Email already in use" });
     } else {
@@ -104,7 +120,6 @@ const updateUser = async (req, res) => {
     }
   }
 };
-
 const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
@@ -119,4 +134,82 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getAllLogs, getAllUsers, createUser, updateUser, deleteUser };
+const getAllNumbers = async (req, res) => {
+  try {
+    // Basic counts
+    const clientCount = await User.countDocuments({ role: "client" });
+    const adminCount = await User.countDocuments({ role: "admin" });
+    const consultantCount = await Consultant.countDocuments();
+    const besionCount = await Besion.countDocuments();
+    const slotAttenteCount = await Slot.countDocuments({
+      status: "En Attente",
+    });
+    const slotConfirmeCount = await Slot.countDocuments({ status: "Confirmé" });
+    const slotReporteCount = await Slot.countDocuments({ status: "Reporté" });
+
+    // Calculate total status counts for all consultants (for pie chart)
+    const totalStatusCounts = await Consultant.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Define all possible statuses
+    const possibleStatuses = ["Qualifié", "Non Qualifié", "En Attente"];
+
+    // Format totalStatusCounts to include all statuses, defaulting to 0 if not present
+    const formattedTotalStatusCounts = possibleStatuses.map((status) => ({
+      status,
+      count: totalStatusCounts.find((item) => item._id === status)?.count || 0,
+    }));
+
+    // Aggregate daily consultant creation counts (for line chart)
+    const dailyCounts = await Consultant.aggregate([
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 }, // Sort by date ascending
+      },
+    ]);
+
+    // Format dailyCounts for the frontend
+    const formattedDailyCounts = dailyCounts.map((item) => ({
+      date: item._id, // Date in 'YYYY-MM-DD' format
+      count: item.count, // Number of consultants created on that date
+    }));
+
+    // Send response with all data
+    res.json({
+      clients: clientCount,
+      admins: adminCount,
+      consultants: consultantCount,
+      besions: besionCount,
+      slotsAttente: slotAttenteCount,
+      slotsConfirme: slotConfirmeCount,
+      slotsReporte: slotReporteCount,
+      totalStatusCounts: formattedTotalStatusCounts,
+      dailyCounts: formattedDailyCounts,
+    });
+  } catch (error) {
+    console.error("Error fetching numbers:", error);
+    res.status(500).json({ message: "Error fetching numbers" });
+  }
+};
+
+module.exports = {
+  getAllLogs,
+  getAllUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  getAllNumbers,
+};

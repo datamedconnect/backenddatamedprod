@@ -138,61 +138,114 @@ const getConsultantAdmin = async (req, res) => {
   }
 };
 
+
 const getAllConsultantsAdmin = async (req, res) => {
   try {
-    // Extract page and limit from query parameters, default to page 1 and limit 20
+    // Extract query parameters
+    const search = req.query.search || "";
+    const phone = req.query.phone || "";
+    const status = req.query.status || "All";
+    const experience = req.query.experience || "All";
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 15;
     const skip = (page - 1) * limit;
 
-    // Fetch total count of consultants
-    const totalConsultants = await Consultant.countDocuments();
+    // Build match conditions for filtering
+    const matchConditions = [];
 
-    // Fetch paginated consultants and populate their associated Profile data
-    const consultants = await Consultant.find()
-      .populate("Profile")
-      .skip(skip)
-      .limit(limit);
+    if (search) {
+      matchConditions.push({
+        $or: [
+          { Email: { $regex: search, $options: "i" } },
+          { "profile.Name": { $regex: search, $options: "i" } },
+        ],
+      });
+    }
 
-    // Transform the data into the desired format
+    if (phone) {
+      matchConditions.push({ Phone: { $regex: phone, $options: "i" } });
+    }
+
+    if (status !== "All") {
+      if (status === "En Attente") {
+        matchConditions.push({
+          $or: [{ status: "En Attente" }, { status: { $exists: false } }],
+        });
+      } else {
+        matchConditions.push({ status: status });
+      }
+    }
+
+    if (experience !== "All") {
+      let expCondition;
+      if (experience.endsWith("+")) {
+        const minExp = parseInt(experience.slice(0, -1), 10);
+        expCondition = { "profile.AnnéeExperience": { $gte: minExp } };
+      } else {
+        const [minExp, maxExp] = experience.split("-").map(Number);
+        expCondition = {
+          "profile.AnnéeExperience": { $gte: minExp, $lte: maxExp },
+        };
+      }
+      matchConditions.push(expCondition);
+    }
+
+    // Define aggregation pipeline
+    const pipeline = [
+      {
+        $lookup: {
+          from: "profileconsultants", // Ensure this matches your ProfileConsultant collection name
+          localField: "Profile",
+          foreignField: "_id",
+          as: "profile",
+        },
+      },
+      { $unwind: "$profile" }, // Unwind the profile array to access fields
+      // Add filter to exclude profiles with Name: "Not Specified"
+      { $match: { "profile.Name": { $ne: "Not Specified" } } },
+    ];
+
+    // Apply additional match conditions if any
+    if (matchConditions.length > 0) {
+      pipeline.push({ $match: { $and: matchConditions } });
+    }
+
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [{ $sort: { createdAt: -1 } }, { $skip: skip }, { $limit: limit }],
+      },
+    });
+
+    // Execute aggregation
+    const result = await Consultant.aggregate(pipeline);
+    const total = result[0].metadata[0] ? result[0].metadata[0].total : 0;
+    const consultants = result[0].data;
+
+    // Transform data for the frontend
     const consultantList = consultants.map((consultant) => ({
-      _id: consultant.Profile ? consultant.Profile._id : "N/A",
-      id: consultant._id,
-      Name: consultant.Profile ? consultant.Profile.Name : "N/A",
-      Experience:
-        consultant.Profile && consultant.Profile.AnnéeExperience !== undefined
-          ? consultant.Profile.AnnéeExperience
-          : "N/A",
+      _id: consultant.profile._id.toString(), // Profile ID
+      id: consultant._id.toString(), // Consultant ID
+      Name: consultant.profile.Name,
+      Experience: consultant.profile.AnnéeExperience,
       Email: consultant.Email,
       TjmOrSalary: consultant.TjmOrSalary,
       Phone: consultant.Phone,
       createdAt: consultant.createdAt,
-      status: consultant.status,
+      status: consultant.status || "En Attente",
     }));
 
-    // Sort the list to prioritize "En Attente" status first
-    consultantList.sort((a, b) => {
-      const aStatus = a.status || "En Attente";
-      const bStatus = b.status || "En Attente";
-      if (aStatus === "En Attente" && bStatus !== "En Attente") {
-        return -1;
-      } else if (aStatus !== "En Attente" && bStatus === "En Attente") {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
-
-    // Send the response with the sorted, paginated list and total count
     res.status(200).json({
       consultants: consultantList,
-      total: totalConsultants,
+      total,
     });
   } catch (error) {
     console.error("Error fetching consultants:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+module.exports = { getAllConsultantsAdmin }; // Ensure this is exported as needed
 
 // const createConsultantAdmin = async (req, res) => {
 //   try {
@@ -454,7 +507,10 @@ const createConsultantAdmin = async (req, res) => {
       const jsonMatch = cvDataString.match(/```json\n([\s\S]*?)\n```/);
       const cleanedCvDataString = jsonMatch
         ? jsonMatch[1].trim()
-        : cvDataString.replace(/```json\n?/, '').replace(/\n?```/, '').trim();
+        : cvDataString
+            .replace(/```json\n?/, "")
+            .replace(/\n?```/, "")
+            .trim();
       console.log("Step 18.5: Cleaned CV data string:", cleanedCvDataString);
 
       const cvData = JSON.parse(cleanedCvDataString);

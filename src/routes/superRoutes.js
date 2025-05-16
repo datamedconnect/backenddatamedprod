@@ -4,6 +4,7 @@ const { authenticate, isSuper } = require("../middleware/auth");
 const superController = require("../controllers/superController");
 const slotController = require("../controllers/slotController");
 const consultantController = require("../controllers/consultantController");
+const besionController = require("../controllers/besionController");
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -14,7 +15,12 @@ router.get("/getSuper", authenticate, isSuper, superController.getAllLogs);
 router.get("/users", authenticate, isSuper, superController.getAllUsers);
 
 // Create a new user
-router.post("/createuseradmin", authenticate, isSuper, superController.createUser);
+router.post(
+  "/createuseradmin",
+  authenticate,
+  isSuper,
+  superController.createUser
+);
 
 // Update a user
 router.put("/users/:id", authenticate, isSuper, superController.updateUser);
@@ -30,6 +36,24 @@ router.get(
   consultantController.getexchangerequestAdmin
 );
 
+router.get(
+  "/allconsultants",
+  authenticate,
+  isSuper,
+  consultantController.getAllConsultantsAdmin
+);
+router.get("/allBesion", authenticate, isSuper, besionController.getAllBesionSuper);
+
+router.get("/numbers", authenticate, isSuper, superController.getAllNumbers);
+
+
+
+router.delete(
+  "/deleteBesion/:id",
+  authenticate,
+  isSuper,
+  besionController.deleteBesion
+);
 // Update slot details
 router.put(
   "/slots/:id/details",
@@ -37,8 +61,6 @@ router.put(
   isSuper,
   slotController.updateSlotDetails
 );
-
-
 router.get(
   "/allconsultants",
   authenticate,
@@ -68,7 +90,7 @@ router.put(
   consultantController.updateConsultantDetails
 );
 router.put(
-  "/consultants/:id/status", 
+  "/consultants/:id/status",
   authenticate,
   isSuper,
   consultantController.updateConsultantStatus

@@ -13,6 +13,7 @@ const logsSchema = new mongoose.Schema(
         "SLOT_UPDATE", // Slot status or details update
         "SLOT_DELETION", // Slot deletion
         "CONSULTANT_CREATION", // Consultant creation
+        "BESION_DELETION",
         "CONSULTANT_UPDATE", // Consultant profile or status update
         "BESION_CREATION", // Besion creation
         "BESION_UPDATE", // Besion status or details update

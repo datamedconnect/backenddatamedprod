@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
   phoneNumber: { type: String },
   name: { type: String },
   companyName: { type: String },
+  status: {
+    type: String,
+    enum: ["Activé", "Désactivé"], // Corrected to "Désactivé"
+    default: "Activé",
+  },
   integrations: [
     {
       service: { type: String, enum: ["google"], required: true },

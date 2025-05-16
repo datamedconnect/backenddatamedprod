@@ -168,6 +168,21 @@ const getAllBesion = async (req, res) => {
   }
 };
 
+const getAllBesionSuper = async (req, res) => {
+  try {
+    const besions = await Besion.find()
+      .populate({
+        path: 'createdBy',
+        select: 'name companyName', 
+      })
+      .sort({ dateLimite: -1 });
+    res.status(200).json(besions);
+  } catch (error) {
+    console.error('Error fetching besoins:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 const getBesionById = async (req, res) => {
   try {
     const besion = await Besion.findById(req.params.id).populate({
@@ -592,6 +607,52 @@ Consultant Details:
     res.status(500).json({ message: error.message });
   }
 };
+const deleteBesion = async (req, res) => {
+  try {
+    const besionId = req.params.id;
+    console.log("Attempting to delete Besion with ID:", besionId);
+
+    // Validate Besion ID
+    if (!isValidObjectId(besionId)) {
+      console.log("Invalid Besion ID");
+      return res.status(400).json({ message: "Invalid Besion ID" });
+    }
+
+    // Find the Besion
+    const besion = await Besion.findById(besionId);
+    if (!besion) {
+      console.log("Besion not found");
+      return res.status(404).json({ message: "Besion not found" });
+    }
+    console.log("Besion found:", besion);
+
+    // Delete the Besion
+    await Besion.deleteOne({ _id: besionId });
+    console.log("Besion deleted successfully");
+
+    // Log the deletion
+    try {
+      await Logs.create({
+        actionType: "BESION_DELETION",
+        user: req.user.id,
+        description: `Besion deleted for client ${besion.nomClient || "N/A"}`,
+        relatedEntity: { entityType: "Besion", entityId: besionId },
+        metadata: {
+          nomClient: besion.nomClient || "N/A",
+          poste: besion.poste || "N/A",
+        },
+      });
+      console.log("Deletion log created successfully");
+    } catch (logError) {
+      console.error("Error logging Besion deletion:", logError.message);
+    }
+
+    res.status(200).json({ message: "Besion deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting Besion:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 module.exports = {
   createbesion,
@@ -602,4 +663,6 @@ module.exports = {
   getAllBesionById,
   getAllConsultantsBesionByIdClient,
   createbesionClient,
+  deleteBesion,
+  getAllBesionSuper
 };
