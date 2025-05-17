@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const Logs = require("../models/Logs"); // Import Logs model
 const { sendEmail } = require("../services/emailService");
 
 const signup = async (req, res) => {
@@ -9,28 +8,20 @@ const signup = async (req, res) => {
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already exists" });
+      return res.status(400).json({ message: "L'email existe déjà" });
     }
 
     if (role === "client" && !companyName) {
       return res
         .status(400)
-        .json({ message: "Company name is required for clients" });
+        .json({ message: "Le nom de l'entreprise est requis pour les clients" });
     }
     if (role === "admin" && !name) {
-      return res.status(400).json({ message: "Name is required for admins" });
+      return res.status(400).json({ message: "Le nom est requis pour les administrateurs" });
     }
 
     const user = new User({ email, password, role, name, companyName });
     await user.save();
-
-    // Log user creation
-    await Logs.create({
-      actionType: "USER_CREATION",
-      user: user._id,
-      description: `User with email ${email} created successfully`,
-      metadata: { role, companyName: companyName || null },
-    });
 
     const verificationToken = jwt.sign(
       { id: user._id },
@@ -85,16 +76,16 @@ const signup = async (req, res) => {
       </html>
     `;
 
-    await sendEmail(email, "Welcome to Datamed Connect", html);
+    await sendEmail(email, "Bienvenue sur Datamed Connect", html);
     res.status(201).json({
-      message: "User created successfully. Please verify your email.",
+      message: "Utilisateur créé avec succès. Veuillez vérifier votre email.",
     });
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("Erreur d'inscription:", error);
     if (error.name === "ValidationError") {
       return res.status(400).json({ message: error.message });
     }
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
@@ -105,7 +96,6 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Adresse e-mail non trouvée" });
     }
-    // Check if the user's status is "Activé"
     if (user.status !== "Activé") {
       return res.status(401).json({ message: "Adresse e-mail non trouvée" });
     }
@@ -113,16 +103,9 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Mot de passe incorrect" });
     }
-    // Token generation and response logic...
     const payload = { id: user._id, role: user.role, email: user.email };
     if (user.companyName) payload.companyName = user.companyName;
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
-    await Logs.create({
-      actionType: "LOGIN",
-      user: user._id,
-      description: `User with email ${email} logged in successfully`,
-      metadata: { ipAddress: req.ip || "unknown" },
-    });
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -134,4 +117,5 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Erreur du serveur, veuillez réessayer plus tard" });
   }
 };
+
 module.exports = { signup, login };

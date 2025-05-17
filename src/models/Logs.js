@@ -6,22 +6,28 @@ const logsSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: [
-        "LOGIN", // User login
-        "LOGOUT", // User logout
-        "SLOT_CREATION", // Slot creation
-        "SLOT_READ", // Slot creation
-        "SLOT_UPDATE", // Slot status or details update
-        "SLOT_DELETION", // Slot deletion
-        "CONSULTANT_CREATION", // Consultant creation
-        "BESION_DELETION",
-        "CONSULTANT_UPDATE", // Consultant profile or status update
-        "BESION_CREATION", // Besion creation
-        "BESION_UPDATE", // Besion status or details update
-        "SAVED_CONSULTANT", // Saving a consultant to a client's list
-        "USER_CREATION", // User account creation
-        "USER_UPDATE", // User profile update
-        "INTEGRATION_ADDED", // Adding a service integration (e.g., Google)
-        "CONSULTANT_READ", // Fetching qualified consultants
+        "CONNEXION", // Connexion de l'utilisateur
+        "DÉCONNEXION", // Déconnexion de l'utilisateur
+        "CRÉATION_CRENEAU", // Création d'un créneau
+        "LECTURE_CRENEAU", // Lecture d'un créneau
+        "MISE_A_JOUR_CRENEAU", // Mise à jour du statut ou des détails d'un créneau
+        "SUPPRESSION_CRENEAU", // Suppression d'un créneau
+        "CRÉATION_CONSULTANT", // Création d'un consultant
+        "SUPPRESSION_BESOIN", // Suppression d'un besoin
+        "MISE_A_JOUR_CONSULTANT", // Mise à jour du profil ou du statut d'un consultant
+        "CRÉATION_BESOIN", // Création d'un besoin
+        "MISE_A_JOUR_BESOIN", // Mise à jour du statut ou des détails d'un besoin
+        "CONSULTANT_ENREGISTRÉ", // Enregistrement d'un consultant dans la liste d'un client
+        "CRÉATION_UTILISATEUR", // Création d'un compte utilisateur
+        "MISE_A_JOUR_UTILISATEUR", // Mise à jour du profil utilisateur
+        "AJOUT_INTÉGRATION", // Ajout d'une intégration de service (par exemple, Google)
+        "LECTURE_CONSULTANT", // Récupération des consultants qualifiés
+        "MISE_A_JOUR_STATUT_CONSULTANT", // Mise à jour du statut d'un consultant (nouveau)
+        "TÉLÉCHARGEMENT_CV", // Téléchargement d'un CV (nouveau)
+        "LECTURE_ADMIN_CONSULTANTS", // Récupération des consultants par un administrateur (nouveau)
+        "LECTURE_REQUETE_ECHANGE", // Récupération des requêtes d'échange (nouveau)
+        "ACTION_INCONNUE",
+        "MISE_A_JOUR_DETAILS_CONSULTANT", // Mise à jour des détails d'un consultant (TjmOrSalary, disponibilité) (nouveau)
       ],
     },
     user: {

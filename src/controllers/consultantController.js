@@ -14,18 +14,20 @@ const extractTextFromPDF = async (buffer) => {
     const data = await pdfParse(buffer);
     return data.text;
   } catch (error) {
-    throw new Error("Failed to extract text from PDF: " + error.message);
+    throw new Error("Échec de l'extraction du texte du PDF : " + error.message);
   }
 };
 
 const getConsultantAdmin = async (req, res) => {
   try {
-    // Retrieve all consultants and populate the Profile field
+    const userId = req.user.id; // ID de l'utilisateur authentifié
+
+    // Récupérer tous les consultants et peupler le champ Profil
     const consultants = await Consultant.find().populate("Profile");
     const users = await User.countDocuments({ role: "client" });
     const exchanges = await Slots.find();
 
-    // Calculate the number of Qualified and Not Qualified consultants
+    // Calculer le nombre de consultants Qualifiés et Non Qualifiés
     const qualifiedCount = consultants.filter(
       (consultant) => consultant.status === "Qualifié"
     ).length;
@@ -36,38 +38,38 @@ const getConsultantAdmin = async (req, res) => {
       (slot) => slot.status === "En Attente"
     ).length;
 
-    // Calculate total status counts from the consultants array
+    // Calculer le total des statuts à partir du tableau des consultants
     const totalStatusCountMap = {};
     consultants.forEach((consultant) => {
       const status = consultant.status;
       totalStatusCountMap[status] = (totalStatusCountMap[status] || 0) + 1;
     });
 
-    // Define all possible statuses
+    // Définir tous les statuts possibles
     const possibleStatuses = ["Qualifié", "Non Qualifié", "En Attente"];
 
-    // Format totalStatusCounts to include all possible statuses, defaulting to 0
+    // Formatter totalStatusCounts pour inclure tous les statuts possibles, avec 0 par défaut
     const formattedTotalStatusCounts = possibleStatuses.map((status) => ({
       status,
       count: totalStatusCountMap[status] || 0,
     }));
 
-    // Prepare the list of consultants with required fields, including _id
+    // Préparer la liste des consultants avec les champs requis, y compris _id
     const consultantList = consultants.map((consultant) => {
       const profile = consultant.Profile;
       return {
-        _id: consultant._id.toString(), // Convert ObjectId to string
+        _id: consultant._id.toString(), // Convertir ObjectId en chaîne
         Name: profile ? profile.Name : "N/A",
         Experience: profile ? profile.AnnéeExperience : "N/A",
         Email: consultant.Email,
-        ProfilId: profile ? profile._id.toString() : null, // Safely handle null profile
+        ProfilId: profile ? profile._id.toString() : null, // Gérer les profils nuls en toute sécurité
         Phone: consultant.Phone,
         createdAt: consultant.createdAt,
         status: consultant.status,
       };
     });
 
-    // Aggregate daily consultant creation counts
+    // Agréger les comptes de création de consultants par jour
     const dailyCounts = await Consultant.aggregate([
       {
         $group: {
@@ -78,23 +80,23 @@ const getConsultantAdmin = async (req, res) => {
         },
       },
       {
-        $sort: { _id: 1 }, // Sort by date in ascending order
+        $sort: { _id: 1 }, // Trier par date en ordre croissant
       },
     ]);
 
-    // Format the aggregation result for the frontend
+    // Formatter le résultat de l'agrégation pour le frontend
     const formattedDailyCounts = dailyCounts.map((item) => ({
-      date: item._id, // Date in 'YYYY-MM-DD' format
-      count: item.count, // Number of consultants created on that date
+      date: item._id, // Date au format 'YYYY-MM-DD'
+      count: item.count, // Nombre de consultants créés à cette date
     }));
 
-    // Get today's date range
+    // Obtenir la plage de dates d'aujourd'hui
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Aggregate today's consultants by status
+    // Agréger les consultants d'aujourd'hui par statut
     const todayStatusCounts = await Consultant.aggregate([
       {
         $match: {
@@ -109,19 +111,19 @@ const getConsultantAdmin = async (req, res) => {
       },
     ]);
 
-    // Create a map of status counts from the aggregation
+    // Créer une carte des comptes de statut à partir de l'agrégation
     const statusCountMap = {};
     todayStatusCounts.forEach((item) => {
       statusCountMap[item._id] = item.count;
     });
 
-    // Format todayStatusCounts to include all possible statuses, defaulting to 0
+    // Formatter todayStatusCounts pour inclure tous les statuts possibles, avec 0 par défaut
     const formattedTodayStatusCounts = possibleStatuses.map((status) => ({
       status,
       count: statusCountMap[status] || 0,
     }));
 
-    // Send the response with all necessary data
+    // Envoyer la réponse avec toutes les données nécessaires
     res.status(200).json({
       qualifiedCount,
       notQualifiedCount,
@@ -133,24 +135,25 @@ const getConsultantAdmin = async (req, res) => {
       todayStatusCounts: formattedTodayStatusCounts,
     });
   } catch (error) {
-    console.error("Error in getConsultantAdmin:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur dans getConsultantAdmin :", error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
-
 const getAllConsultantsAdmin = async (req, res) => {
   try {
-    // Extract query parameters
+    const userId = req.user.id; // ID de l'utilisateur authentifié
+
+    // Extraire les paramètres de requête
     const search = req.query.search || "";
     const phone = req.query.phone || "";
-    const status = req.query.status || "All";
-    const experience = req.query.experience || "All";
+    const status = req.query.status || "Tous";
+    const experience = req.query.experience || "Tous";
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 15;
     const skip = (page - 1) * limit;
 
-    // Build match conditions for filtering
+    // Construire les conditions de correspondance pour le filtrage
     const matchConditions = [];
 
     if (search) {
@@ -166,7 +169,7 @@ const getAllConsultantsAdmin = async (req, res) => {
       matchConditions.push({ Phone: { $regex: phone, $options: "i" } });
     }
 
-    if (status !== "All") {
+    if (status !== "Tous") {
       if (status === "En Attente") {
         matchConditions.push({
           $or: [{ status: "En Attente" }, { status: { $exists: false } }],
@@ -176,7 +179,7 @@ const getAllConsultantsAdmin = async (req, res) => {
       }
     }
 
-    if (experience !== "All") {
+    if (experience !== "Tous") {
       let expCondition;
       if (experience.endsWith("+")) {
         const minExp = parseInt(experience.slice(0, -1), 10);
@@ -190,22 +193,22 @@ const getAllConsultantsAdmin = async (req, res) => {
       matchConditions.push(expCondition);
     }
 
-    // Define aggregation pipeline
+    // Définir le pipeline d'agrégation
     const pipeline = [
       {
         $lookup: {
-          from: "profileconsultants", // Ensure this matches your ProfileConsultant collection name
+          from: "profileconsultants", // Assurez-vous que cela correspond au nom de votre collection ProfileConsultant
           localField: "Profile",
           foreignField: "_id",
           as: "profile",
         },
       },
-      { $unwind: "$profile" }, // Unwind the profile array to access fields
-      // Add filter to exclude profiles with Name: "Not Specified"
-      { $match: { "profile.Name": { $ne: "Not Specified" } } },
+      { $unwind: "$profile" }, // Dérouler le tableau profile pour accéder aux champs
+      // Ajouter un filtre pour exclure les profils avec Name: "Non spécifié"
+      { $match: { "profile.Name": { $ne: "Non spécifié" } } },
     ];
 
-    // Apply additional match conditions if any
+    // Appliquer des conditions de correspondance supplémentaires si elles existent
     if (matchConditions.length > 0) {
       pipeline.push({ $match: { $and: matchConditions } });
     }
@@ -217,15 +220,15 @@ const getAllConsultantsAdmin = async (req, res) => {
       },
     });
 
-    // Execute aggregation
+    // Exécuter l'agrégation
     const result = await Consultant.aggregate(pipeline);
     const total = result[0].metadata[0] ? result[0].metadata[0].total : 0;
     const consultants = result[0].data;
 
-    // Transform data for the frontend
+    // Transformer les données pour le frontend
     const consultantList = consultants.map((consultant) => ({
-      _id: consultant.profile._id.toString(), // Profile ID
-      id: consultant._id.toString(), // Consultant ID
+      _id: consultant.profile._id.toString(), // ID du profil
+      id: consultant._id.toString(), // ID du consultant
       Name: consultant.profile.Name,
       Experience: consultant.profile.AnnéeExperience,
       Email: consultant.Email,
@@ -240,171 +243,29 @@ const getAllConsultantsAdmin = async (req, res) => {
       total,
     });
   } catch (error) {
-    console.error("Error fetching consultants:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur lors de la récupération des consultants :", error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
-module.exports = { getAllConsultantsAdmin }; // Ensure this is exported as needed
-
-// const createConsultantAdmin = async (req, res) => {
-//   try {
-//     // Log the entry point
-//     console.log("Step 1: Entering createConsultantAdmin");
-
-//     // Log all incoming request details
-//     console.log(
-//       "Step 2: Request Headers:",
-//       JSON.stringify(req.headers, null, 2)
-//     );
-//     console.log(
-//       "Step 3: Request Body (raw):",
-//       req.body ? JSON.stringify(req.body, null, 2) : "undefined"
-//     );
-//     console.log(
-//       "Step 4: Request File:",
-//       req.file
-//         ? {
-//             fieldname: req.file.fieldname,
-//             originalname: req.file.originalname,
-//             size: req.file.size,
-//             mimetype: req.file.mimetype,
-//           }
-//         : "No file received"
-//     );
-
-//     // Check if Multer processed the file correctly
-//     if (!req.file) {
-//       console.log(
-//         "Step 5: No file detected - potential Multer configuration issue"
-//       );
-//       return res.status(400).json({ message: "No PDF file uploaded" });
-//     }
-
-//     // Verify the field name matches expectation
-//     if (req.file.fieldname !== "pdffile") {
-//       console.log(
-//         `Step 6: Field name mismatch - Expected: "pdffile", Received: "${req.file.fieldname}"`
-//       );
-//       return res.status(400).json({
-//         message: `Unexpected field name: "${req.file.fieldname}". Expected "pdffile".`,
-//       });
-//     }
-
-//     // Log extracted fields
-//     console.log("Step 7: Extracting request body fields");
-//     const { email, phone, missionType, tjmOrSalary, location, age } =
-//       req.body || {};
-//     console.log("Step 8: Extracted Fields:", {
-//       email,
-//       phone,
-//       missionType,
-//       tjmOrSalary,
-//       location,
-//       age,
-//     });
-
-//     // Validate required fields
-//     if (!email || !phone) {
-//       console.log("Step 9: Validation failed - Missing email or phone");
-//       return res.status(400).json({ message: "Email and phone are required" });
-//     }
-
-//     // Proceed with profile creation
-//     console.log("Step 10: Creating default profile");
-//     const defaultProfileData = {
-//       Name: "Not Specified",
-//       Poste: ["Not Specified"],
-//       Location: location || "Not Specified",
-//       AnnéeExperience: 0,
-//       Skills: [],
-//       ExperienceProfessionnelle: [],
-//       Langue: [],
-//       Formation: [],
-//       Certifications: [],
-//     };
-//     const profile = await profileService.createProfile(defaultProfileData);
-//     console.log("Step 11: Profile created:", profile._id);
-
-//     // Create consultant
-//     console.log("Step 12: Creating consultant");
-//     const consultantData = {
-//       Email: email,
-//       Phone: phone,
-//       MissionType: missionType || "Not Specified",
-//       Age: age ? parseInt(age, 10) : 0,
-//       TjmOrSalary: tjmOrSalary || "Not Specified",
-//       Location: location || "Not Specified",
-//       Profile: profile._id,
-//     };
-//     const consultant = await consultantService.createConsultant(consultantData);
-//     console.log("Step 13: Consultant created:", consultant._id);
-
-//     // Handle PDF processing
-//     console.log("Step 14: Processing PDF file");
-//     if (req.file) {
-//       if (req.file.size > 50 * 1024 * 1024) {
-//         console.log("Step 15: File size exceeds 50MB limit");
-//         return res
-//           .status(400)
-//           .json({ message: "File too large. Maximum size is 50MB." });
-//       }
-
-//       const pdfText = await extractTextFromPDF(req.file.buffer);
-//       console.log("Step 16: PDF text extracted, length:", pdfText.length);
-
-//       const cvDataString = await grokService.extractCVData(pdfText);
-//       console.log("Step 17: CV data extracted from Grok:", cvDataString);
-
-//       if (!cvDataString || typeof cvDataString !== "string") {
-//         console.log("Step 18: Invalid CV data from Grok");
-//         throw new Error("Invalid CV data returned from Grok service");
-//       }
-//       const cvData = JSON.parse(cvDataString);
-//       console.log("Step 19: CV data parsed:", JSON.stringify(cvData, null, 2));
-
-//       const profileData = { ...cvData, consultantId: consultant._id };
-//       await profileService.updateProfile(profile._id, profileData);
-//       console.log("Step 20: Profile updated with CV data");
-
-//       return res.status(201).json({
-//         consultant,
-//         profile,
-//         message: "Consultant created and CV processed successfully",
-//       });
-//     }
-
-//     // Success without PDF
-//     console.log("Step 21: Returning response without PDF processing");
-//     return res.status(201).json({
-//       consultant,
-//       profile,
-//       message: "Consultant created successfully",
-//     });
-//   } catch (error) {
-//     console.error("Error in createConsultantAdmin:", error.stack);
-//     return res
-//       .status(500)
-//       .json({ message: "Error processing request: " + error.message });
-//   }
-// };
-
 const createConsultantAdmin = async (req, res) => {
   try {
-    // Log the entry point
-    console.log("Step 1: Entering createConsultantAdmin");
+    const userId = req.user.id; // ID de l'utilisateur authentifié
 
-    // Log all incoming request details
+    // Journaliser le point d'entrée
+    console.log("Étape 1 : Entrée dans createConsultantAdmin");
+
+    // Journaliser tous les détails de la requête entrante
     console.log(
-      "Step 2: Request Headers:",
+      "Étape 2 : En-têtes de la requête :",
       JSON.stringify(req.headers, null, 2)
     );
     console.log(
-      "Step 3: Request Body (raw):",
-      req.body ? JSON.stringify(req.body, null, 2) : "undefined"
+      "Étape 3 : Corps de la requête (brut) :",
+      req.body ? JSON.stringify(req.body, null, 2) : "indéfini"
     );
     console.log(
-      "Step 4: Request File:",
+      "Étape 4 : Fichier de la requête :",
       req.file
         ? {
             fieldname: req.file.fieldname,
@@ -412,32 +273,32 @@ const createConsultantAdmin = async (req, res) => {
             size: req.file.size,
             mimetype: req.file.mimetype,
           }
-        : "No file received"
+        : "Aucun fichier reçu"
     );
 
-    // Check if Multer processed the file correctly
+    // Vérifier si Multer a correctement traité le fichier
     if (!req.file) {
       console.log(
-        "Step 5: No file detected - potential Multer configuration issue"
+        "Étape 5 : Aucun fichier détecté - problème potentiel de configuration Multer"
       );
-      return res.status(400).json({ message: "No PDF file uploaded" });
+      return res.status(400).json({ message: "Aucun fichier PDF téléchargé" });
     }
 
-    // Verify the field name matches expectation
+    // Vérifier que le nom du champ correspond à l'attente
     if (req.file.fieldname !== "pdffile") {
       console.log(
-        `Step 6: Field name mismatch - Expected: "pdffile", Received: "${req.file.fieldname}"`
+        `Étape 6 : Incohérence de nom de champ - Attendu : "pdffile", Reçu : "${req.file.fieldname}"`
       );
       return res.status(400).json({
-        message: `Unexpected field name: "${req.file.fieldname}". Expected "pdffile".`,
+        message: `Nom de champ inattendu : "${req.file.fieldname}". Attendu "pdffile".`,
       });
     }
 
-    // Log extracted fields
-    console.log("Step 7: Extracting request body fields");
+    // Journaliser les champs extraits
+    console.log("Étape 7 : Extraction des champs du corps de la requête");
     const { email, phone, missionType, tjmOrSalary, location, age } =
       req.body || {};
-    console.log("Step 8: Extracted Fields:", {
+    console.log("Étape 8 : Champs extraits :", {
       email,
       phone,
       missionType,
@@ -446,18 +307,18 @@ const createConsultantAdmin = async (req, res) => {
       age,
     });
 
-    // Validate required fields
+    // Valider les champs requis
     if (!email || !phone) {
-      console.log("Step 9: Validation failed - Missing email or phone");
-      return res.status(400).json({ message: "Email and phone are required" });
+      console.log("Étape 9 : Échec de la validation - Email ou téléphone manquant");
+      return res.status(400).json({ message: "L'email et le téléphone sont requis" });
     }
 
-    // Proceed with profile creation
-    console.log("Step 10: Creating default profile");
+    // Poursuivre avec la création du profil
+    console.log("Étape 10 : Création du profil par défaut");
     const defaultProfileData = {
-      Name: "Not Specified",
-      Poste: ["Not Specified"],
-      Location: location || "Not Specified",
+      Name: "Non spécifié",
+      Poste: ["Non spécifié"],
+      Location: location || "Non spécifié",
       AnnéeExperience: 0,
       Skills: [],
       ExperienceProfessionnelle: [],
@@ -466,44 +327,44 @@ const createConsultantAdmin = async (req, res) => {
       Certifications: [],
     };
     const profile = await profileService.createProfile(defaultProfileData);
-    console.log("Step 11: Profile created:", profile._id);
+    console.log("Étape 11 : Profil créé :", profile._id);
 
-    // Create consultant
-    console.log("Step 12: Creating consultant");
+    // Créer le consultant
+    console.log("Étape 12 : Création du consultant");
     const consultantData = {
       Email: email,
       Phone: phone,
-      MissionType: missionType || "Not Specified",
+      MissionType: missionType || "Non spécifié",
       Age: age ? parseInt(age, 10) : 0,
-      TjmOrSalary: tjmOrSalary || "Not Specified",
-      Location: location || "Not Specified",
+      TjmOrSalary: tjmOrSalary || "Non spécifié",
+      Location: location || "Non spécifié",
       Profile: profile._id,
     };
     const consultant = await consultantService.createConsultant(consultantData);
-    console.log("Step 13: Consultant created:", consultant._id);
+    console.log("Étape 13 : Consultant créé :", consultant._id);
 
-    // Handle PDF processing
-    console.log("Step 14: Processing PDF file");
+    // Gérer le traitement du PDF
+    console.log("Étape 14 : Traitement du fichier PDF");
     if (req.file) {
       if (req.file.size > 50 * 1024 * 1024) {
-        console.log("Step 15: File size exceeds 50MB limit");
+        console.log("Étape 15 : La taille du fichier dépasse la limite de 50 Mo");
         return res
           .status(400)
-          .json({ message: "File too large. Maximum size is 50MB." });
+          .json({ message: "Fichier trop volumineux. La taille maximale est de 50 Mo." });
       }
 
       const pdfText = await extractTextFromPDF(req.file.buffer);
-      console.log("Step 16: PDF text extracted, length:", pdfText.length);
+      console.log("Étape 16 : Texte du PDF extrait, longueur :", pdfText.length);
 
       const cvDataString = await grokService.extractCVData(pdfText);
-      console.log("Step 17: CV data extracted from Grok:", cvDataString);
+      console.log("Étape 17 : Données du CV extraites par Grok :", cvDataString);
 
       if (!cvDataString || typeof cvDataString !== "string") {
-        console.log("Step 18: Invalid CV data from Grok");
-        throw new Error("Invalid CV data returned from Grok service");
+        console.log("Étape 18 : Données du CV invalides de Grok");
+        throw new Error("Données du CV invalides retournées par le service Grok");
       }
 
-      // Clean the cvDataString to extract only the JSON object
+      // Nettoyer la chaîne cvDataString pour extraire uniquement l'objet JSON
       const jsonMatch = cvDataString.match(/```json\n([\s\S]*?)\n```/);
       const cleanedCvDataString = jsonMatch
         ? jsonMatch[1].trim()
@@ -511,50 +372,51 @@ const createConsultantAdmin = async (req, res) => {
             .replace(/```json\n?/, "")
             .replace(/\n?```/, "")
             .trim();
-      console.log("Step 18.5: Cleaned CV data string:", cleanedCvDataString);
+      console.log("Étape 18.5 : Chaîne de données du CV nettoyée :", cleanedCvDataString);
 
       const cvData = JSON.parse(cleanedCvDataString);
-      console.log("Step 19: CV data parsed:", JSON.stringify(cvData, null, 2));
+      console.log("Étape 19 : Données du CV analysées :", JSON.stringify(cvData, null, 2));
 
       const profileData = { ...cvData, consultantId: consultant._id };
       await profileService.updateProfile(profile._id, profileData);
-      console.log("Step 20: Profile updated with CV data");
+      console.log("Étape 20 : Profil mis à jour avec les données du CV");
 
       return res.status(201).json({
         consultant,
         profile,
-        message: "Consultant created and CV processed successfully",
+        message: "Consultant créé et CV traité avec succès",
       });
     }
 
-    // Success without PDF
-    console.log("Step 21: Returning response without PDF processing");
+    // Succès sans PDF
+    console.log("Étape 21 : Retour de la réponse sans traitement du PDF");
     return res.status(201).json({
       consultant,
       profile,
-      message: "Consultant created successfully",
+      message: "Consultant créé avec succès",
     });
   } catch (error) {
-    console.error("Error in createConsultantAdmin:", error.stack);
+    console.error("Erreur dans createConsultantAdmin :", error.stack);
     return res
       .status(500)
-      .json({ message: "Error processing request: " + error.message });
+      .json({ message: "Erreur lors du traitement de la requête : " + error.message });
   }
 };
 
 const uploadCV = async (req, res) => {
   try {
+    const userId = req.user.id; // ID de l'utilisateur authentifié
     const { email, phone, missionType, tjmOrSalary, location } = req.body;
 
-    // Validate required fields
+    // Valider les champs requis
     if (!email || !phone) {
-      return res.status(400).json({ message: "Email and phone are required" });
+      return res.status(400).json({ message: "L'email et le téléphone sont requis" });
     }
 
     const defaultProfileData = {
-      Name: "Not Specified",
-      Poste: ["Not Specified"],
-      Location: location || "Not Specified",
+      Name: "Non spécifié",
+      Poste: ["Non spécifié"],
+      Location: location || "Non spécifié",
       AnnéeExperience: 0,
       Skills: [],
       ExperienceProfessionnelle: [],
@@ -564,31 +426,36 @@ const uploadCV = async (req, res) => {
     };
     const profile = await profileService.createProfile(defaultProfileData);
 
-    // Create consultant with additional data and profile reference
+    // Créer un consultant avec des données supplémentaires et une référence au profil
     const consultantData = {
       Email: email,
       Phone: phone,
-      MissionType: missionType || "Not Specified",
+      MissionType: missionType || "Non spécifié",
       Age: 0,
-      TjmOrSalary: tjmOrSalary || "Not Specified",
-      Location: location || "Not Specified",
+      TjmOrSalary: tjmOrSalary || "Non spécifié",
+      Location: location || "Non spécifié",
       Profile: profile._id,
     };
     const consultant = await consultantService.createConsultant(consultantData);
 
     res.status(201).json({ consultant, profile });
   } catch (error) {
+    console.error("Erreur dans uploadCV :", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 const getInitials = (name) => {
   if (!name) return "";
   const parts = name.split(" ");
   const initials = parts.map((part) => part[0].toUpperCase()).join("");
   return initials;
 };
+
 const getexchangerequestAdmin = async (req, res) => {
   try {
+    const userId = req.user.id; // ID de l'utilisateur authentifié
+
     const slots = await Slots.find({})
       .populate({
         path: "consultants",
@@ -602,8 +469,10 @@ const getexchangerequestAdmin = async (req, res) => {
         select: "email role companyName name",
       })
       .lean();
-    console.log(slots);
-    // Transform the slots to the desired output format
+
+    console.log("Créneaux récupérés :", slots);
+
+    // Transformer les créneaux au format de sortie souhaité
     const transformedSlots = slots.map((slot) => ({
       _id: slot._id,
       exchangeNumber: slot.exchangeNumber,
@@ -638,82 +507,96 @@ const getexchangerequestAdmin = async (req, res) => {
 
     res.json(transformedSlots);
   } catch (error) {
+    console.error("Erreur dans getexchangerequestAdmin :", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 const getConsultant = async (req, res) => {
   try {
+    const userId = req.user.id; // ID de l'utilisateur authentifié
     const consultant = await consultantService.getConsultantById(req.params.id);
     if (!consultant) {
-      return res.status(404).json({ message: "Consultant not found" });
+      return res.status(404).json({ message: "Consultant non trouvé" });
     }
+
     res.status(200).json(consultant);
   } catch (error) {
+    console.error("Erreur dans getConsultant :", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 const updateConsultant = async (req, res) => {
   try {
-    const { id } = req.params; // Get consultant ID from URL
-    const updateData = req.body; // Get fields to update from request body
+    const userId = req.user.id; // ID de l'utilisateur authentifié
+    const { id } = req.params; // Obtenir l'ID du consultant depuis l'URL
+    const updateData = req.body; // Obtenir les champs à mettre à jour depuis le corps de la requête
+
     const updatedConsultant = await consultantService.updateConsultant(
       id,
       updateData
     );
+
     res.status(200).json(updatedConsultant);
   } catch (error) {
+    console.error("Erreur dans updateConsultant :", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 const updateConsultantStatus = async (req, res) => {
   try {
-    const { id } = req.params; // Extract consultant ID from URL parameters
-    const { status } = req.body; // Extract new status from request body
+    const userId = req.user.id; // ID de l'utilisateur authentifié
+    const { id } = req.params; // Extraire l'ID du consultant depuis les paramètres de l'URL
+    const { status } = req.body; // Extraire le nouveau statut depuis le corps de la requête
 
-    // Check if status is provided
+    // Vérifier si le statut est fourni
     if (!status) {
-      return res.status(400).json({ message: "Status is required" });
+      return res.status(400).json({ message: "Le statut est requis" });
     }
 
-    // Update the consultant's status in the database
+    // Mettre à jour le statut du consultant dans la base de données
     const updatedConsultant = await Consultant.findByIdAndUpdate(
       id,
       { status },
-      { new: true, runValidators: true } // Return updated document and enforce schema validation
+      { new: true, runValidators: true } // Retourner le document mis à jour et appliquer la validation du schéma
     );
 
-    // Check if consultant exists
+    // Vérifier si le consultant existe
     if (!updatedConsultant) {
-      return res.status(404).json({ message: "Consultant not found" });
+      return res.status(404).json({ message: "Consultant non trouvé" });
     }
 
-    // Send the updated consultant as response
+    // Envoyer le consultant mis à jour en réponse
     res.status(200).json(updatedConsultant);
   } catch (error) {
-    // Handle specific Mongoose errors
+    // Gérer les erreurs spécifiques de Mongoose
     if (error.name === "CastError") {
-      return res.status(400).json({ message: "Invalid consultant ID" });
+      return res.status(400).json({ message: "ID de consultant invalide" });
     }
     if (error.name === "ValidationError") {
       return res.status(400).json({ message: error.message });
     }
-    console.error("Error updating consultant status:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur lors de la mise à jour du statut du consultant :", error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
+
 const updateConsultantDetails = async (req, res) => {
   try {
-    const { id } = req.params; // Consultant ID from URL
-    const { TjmOrSalary, available } = req.body; // New values from request body
+    const userId = req.user.id; // ID de l'utilisateur authentifié
+    const { id } = req.params; // ID du consultant depuis l'URL
+    const { TjmOrSalary, available } = req.body; // Nouvelles valeurs depuis le corps de la requête
 
-    // Ensure at least one field is provided
+    // S'assurer qu'au moins un champ est fourni
     if (!TjmOrSalary && !available) {
       return res.status(400).json({
-        message: "At least one field (TjmOrSalary or available) is required",
+        message: "Au moins un champ (TjmOrSalary ou disponible) est requis",
       });
     }
 
-    // Build the update object
+    // Construire l'objet de mise à jour
     const updateData = {};
     if (TjmOrSalary) updateData.TjmOrSalary = TjmOrSalary;
     if (available) {
@@ -721,36 +604,37 @@ const updateConsultantDetails = async (req, res) => {
       if (isNaN(availableDate.getTime())) {
         return res
           .status(400)
-          .json({ message: "Invalid date format for available" });
+          .json({ message: "Format de date invalide pour disponible" });
       }
       updateData.available = availableDate;
     }
 
-    // Update the consultant in the database
+    // Mettre à jour le consultant dans la base de données
     const updatedConsultant = await Consultant.findByIdAndUpdate(
       id,
       updateData,
       { new: true, runValidators: true }
     );
 
-    // Check if the consultant exists
+    // Vérifier si le consultant existe
     if (!updatedConsultant) {
-      return res.status(404).json({ message: "Consultant not found" });
+      return res.status(404).json({ message: "Consultant non trouvé" });
     }
 
-    // Return the updated consultant
+    // Retourner le consultant mis à jour
     res.status(200).json(updatedConsultant);
   } catch (error) {
     if (error.name === "CastError") {
-      return res.status(400).json({ message: "Invalid consultant ID" });
+      return res.status(400).json({ message: "ID de consultant invalide" });
     }
     if (error.name === "ValidationError") {
       return res.status(400).json({ message: error.message });
     }
-    console.error("Error updating consultant details:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur lors de la mise à jour des détails du consultant :", error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
+
 module.exports = {
   uploadCV,
   getConsultant,

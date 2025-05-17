@@ -13,6 +13,7 @@ const slotRoutes = require("./routes/slotRoutes");
 const superRoutes = require("./routes/superRoutes");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const loggingMiddleware = require("./middleware/loggingMiddleware"); // Adjust the path as needed
 connectDB();
 
 const app = express();
@@ -30,6 +31,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+app.use(loggingMiddleware);
 app.use(express.json());
 // Routes
 // app.use("/api/integration", integrationRoutes);

@@ -1,7 +1,6 @@
 const Besion = require("../models/Besion");
 const Consultant = require("../models/Consultant");
 const User = require("../models/User");
-const Logs = require("../models/Logs"); // Import Logs model
 const axios = require("axios");
 const fuzzball = require("fuzzball");
 const { isValidObjectId } = require("mongoose");
@@ -33,55 +32,46 @@ const createbesion = async (req, res) => {
 
     await newBesion.save();
 
-    // Log Besion creation
-    await Logs.create({
-      actionType: "BESION_CREATION",
-      user: createdBy,
-      description: `Besion created for client ${nomClient || "N/A"}`,
-      relatedEntity: { entityType: "Besion", entityId: newBesion._id },
-      metadata: { nomClient, poste, prixAchat: prixAchat.toString() },
-    });
-
     res
       .status(201)
-      .json({ message: "Besion created successfully", besion: newBesion });
+      .json({ message: "Besoin créé avec succès", besion: newBesion });
   } catch (error) {
     if (error.name === "ValidationError") {
       return res.status(400).json({ message: error.message });
     }
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
 const createbesionClient = async (req, res) => {
   try {
-    console.log("Received request to create Besion");
+    console.log("Requête reçue pour créer un Besoin");
     const userId = req.user.id;
-    console.log("User ID:", userId);
+    console.log("ID de l'utilisateur:", userId);
     if (!userId) {
-      console.log("Unauthorized: User not authenticated");
+      console.log("Non autorisé : Utilisateur non authentifié");
       return res
         .status(401)
-        .json({ message: "Unauthorized: User not authenticated" });
+        .json({ message: "Non autorisé : Utilisateur non authentifié" });
     }
 
-    console.log("Fetching user from database");
+    console.log("Récupération de l'utilisateur dans la base de données");
     const user = await User.findById(userId);
     if (!user) {
-      console.log("User not found");
-      return res.status(404).json({ message: "User not found" });
+      console.log("Utilisateur non trouvé");
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
-    console.log("User found:", user);
+    console.log("Utilisateur trouvé:", user);
     if (user.role !== "client") {
-      console.log("Forbidden: Insufficient permissions");
+      console.log("Interdit : Permissions insuffisantes");
       return res
         .status(403)
-        .json({ message: "Forbidden: Insufficient permissions" });
+        .json({ message: "Interdit : Permissions insuffisantes" });
     }
 
-    const companyName = user.companyName || "Unknown Client";
-    console.log("Company name:", companyName);
+    const companyName = user.companyName || "Client inconnu";
+    console.log("Nom de l'entreprise:", companyName);
     const {
       dateLimite,
       poste,
@@ -90,7 +80,7 @@ const createbesionClient = async (req, res) => {
       prixAchat,
       status = "Ouvert",
     } = req.body;
-    console.log("Besion data:", {
+    console.log("Données du besoin:", {
       dateLimite,
       poste,
       experience,
@@ -100,17 +90,17 @@ const createbesionClient = async (req, res) => {
     });
 
     if (!dateLimite || !poste || !experience || !mission || !prixAchat) {
-      console.log("Missing required fields");
-      return res.status(400).json({ message: "Missing required fields" });
+      console.log("Champs requis manquants");
+      return res.status(400).json({ message: "Champs requis manquants" });
     }
     if (isNaN(Number(experience)) || isNaN(Number(prixAchat))) {
-      console.log("Invalid experience or prixAchat");
+      console.log("Expérience ou prix d'achat invalide");
       return res
         .status(400)
-        .json({ message: "Experience and prixAchat must be numbers" });
+        .json({ message: "L'expérience et le prix d'achat doivent être des nombres" });
     }
 
-    console.log("Creating new Besion");
+    console.log("Création d'un nouveau Besoin");
     const newBesion = new Besion({
       createdBy: userId,
       nomClient: companyName,
@@ -123,38 +113,20 @@ const createbesionClient = async (req, res) => {
       consultantsScores: [],
     });
 
-    console.log("Saving Besion to database");
+    console.log("Enregistrement du Besoin dans la base de données");
     await newBesion.save();
-    console.log("Besion saved successfully");
+    console.log("Besoin enregistré avec succès");
 
-    try {
-      console.log("Creating log entry");
-      await Logs.create({
-        actionType: "BESION_CREATION",
-        user: userId,
-        description: `Besion created for client ${companyName}`,
-        relatedEntity: { entityType: "Besion", entityId: newBesion._id },
-        metadata: {
-          nomClient: companyName,
-          poste,
-          prixAchat: prixAchat.toString(),
-        },
-      });
-      console.log("Log entry created successfully");
-    } catch (logError) {
-      console.error("Error logging Besion creation:", logError.message);
-    }
-
-    console.log("Returning success response");
+    console.log("Retour de la réponse de succès");
     res.status(201).json({
-      message: "Besion created successfully",
+      message: "Besoin créé avec succès",
       besion: newBesion,
     });
   } catch (error) {
-    console.error("Error creating Besion:", error.message, error.stack);
+    console.error("Erreur lors de la création du Besoin:", error.message, error.stack);
     res
       .status(500)
-      .json({ message: "Internal server error", details: error.message });
+      .json({ message: "Erreur interne du serveur", details: error.message });
   }
 };
 
@@ -164,7 +136,7 @@ const getAllBesion = async (req, res) => {
     res.status(200).json(besions);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
@@ -172,14 +144,14 @@ const getAllBesionSuper = async (req, res) => {
   try {
     const besions = await Besion.find()
       .populate({
-        path: 'createdBy',
-        select: 'name companyName', 
+        path: "createdBy",
+        select: "name companyName",
       })
       .sort({ dateLimite: -1 });
     res.status(200).json(besions);
   } catch (error) {
-    console.error('Error fetching besoins:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Erreur lors de la récupération des besoins:", error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
@@ -193,47 +165,47 @@ const getBesionById = async (req, res) => {
         select: "_id Name Poste Location AnnéeExperience Skills",
       },
     });
-    console.log("Besion found:", besion);
+    console.log("Besoin trouvé:", besion);
     if (!besion) {
-      return res.status(404).json({ message: "Besion not found" });
+      return res.status(404).json({ message: "Besoin non trouvé" });
     }
     res.status(200).json(besion);
-    console.log("Besion returned");
+    console.log("Besoin retourné");
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
 const createScore = async (req, res) => {
   try {
-    console.log("Starting createScore function");
+    console.log("Démarrage de la fonction createScore");
 
     const besionId = req.params.id;
     if (!isValidObjectId(besionId)) {
-      console.log("Invalid Besion ID");
-      return res.status(400).json({ message: "Invalid Besion ID" });
+      console.log("ID de Besoin invalide");
+      return res.status(400).json({ message: "ID de Besoin invalide" });
     }
-    console.log("Besion ID:", besionId);
+    console.log("ID de Besoin:", besionId);
     const BesionClient = await Besion.findById(besionId);
     if (!BesionClient) {
-      console.log("Besion not found");
-      return res.status(404).json({ message: "Besion not found" });
+      console.log("Besoin non trouvé");
+      return res.status(404).json({ message: "Besoin non trouvé" });
     }
     console.log("BesionClient:", BesionClient);
 
     const consultantId = req.body._id;
     if (!isValidObjectId(consultantId)) {
-      console.log("Invalid Consultant ID");
-      return res.status(400).json({ message: "Invalid Consultant ID" });
+      console.log("ID de Consultant invalide");
+      return res.status(400).json({ message: "ID de Consultant invalide" });
     }
-    console.log("Consultant ID:", consultantId);
+    console.log("ID de Consultant:", consultantId);
     const ConsultantProposer = await Consultant.findById(consultantId).populate(
       "Profile"
     );
     if (!ConsultantProposer) {
-      console.log("Consultant not found");
-      return res.status(404).json({ message: "Consultant not found" });
+      console.log("Consultant non trouvé");
+      return res.status(404).json({ message: "Consultant non trouvé" });
     }
     console.log("ConsultantProposer:", ConsultantProposer);
 
@@ -252,87 +224,78 @@ const createScore = async (req, res) => {
     };
 
     const prompt = `
-    Think like a recruiter and a Tech Aquisition Manager.
-Analyze the compatibility between the following Besion and Consultant based on these criteria:
+Pensez comme un recruteur et un gestionnaire d'acquisition technologique.
+Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
 
-- Similarity between the Besion's poste and the Consultant's poste (exact or highly similar roles).
-- Relevance of the Consultant's skills to the Besion's mission (assess how directly applicable the skills are).
-- Relevance of the Consultant's professional experiences to the Besion's mission (evaluate alignment with mission goals).
-- Occurrence of keywords from the Besion's mission in the Consultant's profile (skills, professional experiences, formation, and certifications).
+- Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
+- Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
+- Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
+- Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
 
-Do not consider the years of experience required or the consultant's years of experience.
-make sure you see each key words andcalculrate an  accurate   score.
+Ne tenez pas compte des années d'expérience requises ou des années d'expérience du Consultant.
+Assurez-vous d'examiner chaque mot-clé et de calculer un score précis.
 
-Provide only the compatibility score as a percentage (0-100), where 100% represents a perfect match and 0% represents no alignment.
+Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
 
-**Besion:**
-- Poste: ${besionDetails.poste}
-- Mission: ${besionDetails.mission}
+**Besoin :**
+- Poste : ${besionDetails.poste}
+- Mission : ${besionDetails.mission}
 
-**Consultant:**
-- Poste: ${consultantDetails.poste.join(", ")}
-- Skills: ${consultantDetails.skills.join(", ")}
-- Professional Experience: ${
+**Consultant :**
+- Poste : ${consultantDetails.poste.join(", ")}
+- Compétences : ${consultantDetails.skills.join(", ")}
+- Expérience professionnelle : ${
       consultantDetails.experienceProfessionnelle.length > 0
         ? consultantDetails.experienceProfessionnelle
             .map(
               (exp) =>
-                `${exp.TitrePoste || "N/A"} at ${
+                `${exp.TitrePoste || "N/A"} chez ${
                   exp.NomEntreprise || "N/A"
-                } on ${exp.Context || "N/A"} and ${
+                } sur ${exp.Context || "N/A"} et ${
                   exp.Réalisation || "N/A"
-                } with   ${exp.TechnicalEnv || "N/A"}  (${exp.Date || "N/A"})`
+                } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`
             )
             .join("; ")
         : "N/A"
     }
-- Formation: ${consultantDetails.formation.join(", ") || "N/A"}
-- Certifications: ${consultantDetails.certification.join(", ") || "N/A"}
+- Formation : ${consultantDetails.formation.join(", ") || "N/A"}
+- Certifications : ${consultantDetails.certification.join(", ") || "N/A"}
 `;
-    console.log("Prompt for Grok API:", prompt);
+    console.log("Prompt pour l'API Grok :", prompt);
 
     const grokResponse = await callGrokAPI(prompt);
-    console.log("Grok API response:", grokResponse);
+    console.log("Réponse de l'API Grok :", grokResponse);
 
     const score = grokResponse.score;
     if (typeof score !== "number" || score < 0 || score > 100) {
-      console.log("Invalid score received:", score);
+      console.log("Score invalide reçu :", score);
       return res
         .status(400)
-        .json({ message: "Invalid score received from API" });
+        .json({ message: "Score invalide reçu de l'API" });
     }
-    console.log("Extracted score:", score);
+    console.log("Score extrait :", score);
 
     BesionClient.consultantsScores.push({
       consultantId: ConsultantProposer._id,
       score: score,
     });
     await BesionClient.save();
-    console.log("Score saved in Besion document");
-
-    // Log score addition
-    await Logs.create({
-      actionType: "BESION_UPDATE",
-      user: req.user.id,
-      description: `Score ${score}% added for consultant ${consultantId} in Besion ${besionId}`,
-      relatedEntity: { entityType: "Besion", entityId: besionId },
-      metadata: { consultantId, score: score.toString() },
-    });
+    console.log("Score enregistré dans le document Besoin");
 
     const response = {
       consultantId: ConsultantProposer._id,
       score: score,
     };
-    console.log("Response to client:", response);
+    console.log("Réponse au client :", response);
     res.status(200).json(response);
   } catch (error) {
-    console.error("Error in createScore:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur dans createScore :", error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
 async function callGrokAPI(prompt) {
-  console.log("Calling Grok API with prompt:", prompt);
+  console.log("Appel de l'API Grok avec le prompt :", prompt);
   const apiKey = process.env.GROK_API_KEY;
   const response = await axios.post(
     "https://api.x.ai/v1/chat/completions",
@@ -347,7 +310,7 @@ async function callGrokAPI(prompt) {
       },
     }
   );
-  console.log("Grok API raw response:", response.data);
+  console.log("Réponse brute de l'API Grok :", response.data);
 
   const message = response.data.choices[0].message.content;
   const scoreMatch = message.match(/\d+/);
@@ -359,22 +322,22 @@ const getAllConsultantsBesionById = async (req, res) => {
   try {
     const userId = req.params.id;
 
-    console.log("Requested userId:", userId);
-    console.log("Authenticated userId:", req.user.id);
+    console.log("ID d'utilisateur requis :", userId);
+    console.log("ID d'utilisateur authentifié :", req.user.id);
 
     if (userId !== req.user.id) {
       return res
         .status(403)
-        .json({ message: "Forbidden: You can only access your own data" });
+        .json({ message: "Interdit : Vous ne pouvez accéder qu'à vos propres données" });
     }
 
     const besions = await Besion.find({ createdBy: userId });
-    console.log("Fetched Besions:", besions);
+    console.log("Besoins récupérés :", besions);
 
     if (!besions || besions.length === 0) {
       return res
         .status(404)
-        .json({ message: "No Besions found for this user" });
+        .json({ message: "Aucun Besoin trouvé pour cet utilisateur" });
     }
 
     const consultantIds = new Set();
@@ -387,12 +350,12 @@ const getAllConsultantsBesionById = async (req, res) => {
         consultantScoresMap.set(consultantIdStr, scoreEntry.score);
       });
     });
-    console.log("Collected consultantIds:", Array.from(consultantIds));
+    console.log("IDs de consultants collectés :", Array.from(consultantIds));
 
     const consultants = await Consultant.find({
       _id: { $in: Array.from(consultantIds) },
     }).populate("Profile");
-    console.log("Fetched consultants:", consultants);
+    console.log("Consultants récupérés :", consultants);
 
     const consultantList = consultants
       .map((consultant) => {
@@ -422,8 +385,8 @@ const getAllConsultantsBesionById = async (req, res) => {
       total: consultantList.length,
     });
   } catch (error) {
-    console.error("Error fetching consultants:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur lors de la récupération des consultants :", error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
@@ -460,7 +423,7 @@ const getAllBesionById = async (req, res) => {
     res.status(200).json(besions);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
@@ -468,54 +431,54 @@ const getAllConsultantsBesionByIdClient = async (req, res) => {
   const { id } = req.params;
 
   try {
-    console.log(`Fetching Besion with ID: ${id}`);
+    console.log(`Récupération du Besoin avec l'ID : ${id}`);
     const besion = await Besion.findById(id).exec();
     if (!besion) {
-      console.log("Besion not found");
-      return res.status(404).json({ message: "Besion not found" });
+      console.log("Besoin non trouvé");
+      return res.status(404).json({ message: "Besoin non trouvé" });
     }
-    console.log(`Besion found: ${besion._id}`);
+    console.log(`Besoin trouvé : ${besion._id}`);
 
-    console.log("Fetching all consultants with populated profiles");
+    console.log("Récupération de tous les consultants avec profils peuplés");
     const consultants = await Consultant.find().populate("Profile").exec();
-    console.log(`Found ${consultants.length} consultants`);
+    console.log(`Trouvé ${consultants.length} consultants`);
 
     const compatibilityResults = [];
     const evaluations = consultants.map(async (consultant) => {
-      console.log(`Evaluating consultant: ${consultant._id}`);
+      console.log(`Évaluation du consultant : ${consultant._id}`);
       const prompt = `
-Analyze the compatibility between the following Besion and Consultant based on these criteria:
+Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
 
-- Similarity between the Besion's poste and the Consultant's poste (exact or highly similar roles).
-- Relevance of the Consultant's skills to the Besion's mission (assess how directly applicable the skills are).
-- Relevance of the Consultant's professional experiences to the Besion's mission (evaluate alignment with mission goals).
-- Occurrence of keywords from the Besion's mission in the Consultant's profile (skills, professional experiences, formation, and certifications).
+- Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
+- Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
+- Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
+- Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
 
-take into Consideration the years of experience required and the consultant's years of experience. 
+Tenez compte des années d'expérience requises et des années d'expérience du Consultant.
 
-Provide only the compatibility score as a percentage (0-100), where 100% represents a perfect match and 0% represents no alignment.
+Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
 
-Besion Details:
-- Poste: ${besion.poste}
-- Mission: ${besion.mission}
+Détails du Besoin :
+- Poste : ${besion.poste}
+- Mission : ${besion.mission}
 
-Consultant Details:
-- Poste: ${consultant.Profile?.Poste.join(", ") || "N/A"}
-- Skills: ${consultant.Profile?.Skills.join(", ") || "N/A"}
--Experience ${consultant.Profile?.AnnéeExperience || "N/A"}
-- Professional Experiences: ${
+Détails du Consultant :
+- Poste : ${consultant.Profile?.Poste.join(", ") || "N/A"}
+- Compétences : ${consultant.Profile?.Skills.join(", ") || "N/A"}
+- Expérience : ${consultant.Profile?.AnnéeExperience || "N/A"}
+- Expériences professionnelles : ${
         consultant.Profile?.ExperienceProfessionnelle.map(
-          (exp) => `${exp.TitrePoste} at ${exp.NomEntreprise}: ${exp.Context}`
+          (exp) => `${exp.TitrePoste} chez ${exp.NomEntreprise} : ${exp.Context}`
         ).join("; ") || "N/A"
       }
-- Formation: ${
+- Formation : ${
         consultant.Profile?.Formation.map(
-          (form) => `${form.Diplome} from ${form.Ecole}`
+          (form) => `${form.Diplome} de ${form.Ecole}`
         ).join(", ") || "N/A"
       }
-- Certifications: ${
+- Certifications : ${
         consultant.Profile?.Certifications.map(
-          (cert) => `${cert.Certif} from ${cert.Organisme}`
+          (cert) => `${cert.Certif} de ${cert.Organisme}`
         ).join(", ") || "N/A"
       }
 `;
@@ -536,50 +499,38 @@ Consultant Details:
         );
 
         console.log(
-          `Raw response for consultant ${consultant._id}:`,
+          `Réponse brute pour le consultant ${consultant._id} :`,
           response.data
         );
         const scoreText = response.data.choices[0].message.content.trim();
 
-        // Extract numeric percentage from the response (e.g., "90%" -> 90)
         const scoreMatch = scoreText.match(/(\d+)%/);
         const score = scoreMatch ? parseInt(scoreMatch[1], 10) : NaN;
 
-        // Only include scores greater than 0%
         if (!isNaN(score) && score > 0 && score <= 100) {
           compatibilityResults.push({
             consultantId: consultant._id,
             score: score,
           });
-          console.log(`Consultant ${consultant._id} score: ${score}`);
+          console.log(`Score du consultant ${consultant._id} : ${score}`);
         } else {
           console.log(
-            `Score ignored (0% or invalid) for consultant ${consultant._id}: ${scoreText}`
+            `Score ignoré (0 % ou invalide) pour le consultant ${consultant._id} : ${scoreText}`
           );
         }
       } catch (error) {
-        console.error(`Error evaluating consultant ${consultant._id}:`, error);
+        console.error(`Erreur lors de l'évaluation du consultant ${consultant._id} :`, error);
       }
     });
 
     await Promise.all(evaluations);
     console.log(
-      `Evaluated ${compatibilityResults.length} consultants with scores greater than 0%`
+      `Évalué ${compatibilityResults.length} consultants avec des scores supérieurs à 0 %`
     );
 
-    // Save only consultants with scores > 0% to Besion
     besion.consultantsScores = compatibilityResults;
     await besion.save();
-    console.log("Saved compatibility scores to Besion");
-
-    // Log Besion update with scores
-    await Logs.create({
-      actionType: "BESION_UPDATE",
-      user: req.user.id,
-      description: `Compatibility scores updated for Besion ${id} with ${compatibilityResults.length} consultants`,
-      relatedEntity: { entityType: "Besion", entityId: id },
-      metadata: { consultantCount: compatibilityResults.length.toString() },
-    });
+    console.log("Scores de compatibilité enregistrés dans le Besoin");
 
     const responseData = compatibilityResults.map((result) => {
       const consultant = consultants.find((c) =>
@@ -600,57 +551,38 @@ Consultant Details:
       };
     });
 
-    console.log("Sending response with consultant data");
+    console.log("Envoi de la réponse avec les données des consultants");
     res.json(responseData);
   } catch (error) {
-    console.error("Error in getAllConsultantsBesionByIdClient:", error);
+    console.error("Erreur dans getAllConsultantsBesionByIdClient :", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 const deleteBesion = async (req, res) => {
   try {
     const besionId = req.params.id;
-    console.log("Attempting to delete Besion with ID:", besionId);
+    console.log("Tentative de suppression du Besoin avec l'ID :", besionId);
 
-    // Validate Besion ID
     if (!isValidObjectId(besionId)) {
-      console.log("Invalid Besion ID");
-      return res.status(400).json({ message: "Invalid Besion ID" });
+      console.log("ID de Besoin invalide");
+      return res.status(400).json({ message: "ID de Besoin invalide" });
     }
 
-    // Find the Besion
     const besion = await Besion.findById(besionId);
     if (!besion) {
-      console.log("Besion not found");
-      return res.status(404).json({ message: "Besion not found" });
+      console.log("Besoin non trouvé");
+      return res.status(404).json({ message: "Besoin non trouvé" });
     }
-    console.log("Besion found:", besion);
+    console.log("Besoin trouvé :", besion);
 
-    // Delete the Besion
     await Besion.deleteOne({ _id: besionId });
-    console.log("Besion deleted successfully");
+    console.log("Besoin supprimé avec succès");
 
-    // Log the deletion
-    try {
-      await Logs.create({
-        actionType: "BESION_DELETION",
-        user: req.user.id,
-        description: `Besion deleted for client ${besion.nomClient || "N/A"}`,
-        relatedEntity: { entityType: "Besion", entityId: besionId },
-        metadata: {
-          nomClient: besion.nomClient || "N/A",
-          poste: besion.poste || "N/A",
-        },
-      });
-      console.log("Deletion log created successfully");
-    } catch (logError) {
-      console.error("Error logging Besion deletion:", logError.message);
-    }
-
-    res.status(200).json({ message: "Besion deleted successfully" });
+    res.status(200).json({ message: "Besoin supprimé avec succès" });
   } catch (error) {
-    console.error("Error deleting Besion:", error.message);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur lors de la suppression du Besoin :", error.message);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
@@ -664,5 +596,5 @@ module.exports = {
   getAllConsultantsBesionByIdClient,
   createbesionClient,
   deleteBesion,
-  getAllBesionSuper
+  getAllBesionSuper,
 };

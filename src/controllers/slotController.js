@@ -1,7 +1,6 @@
 const Slots = require("../models/Slots");
-const Logs = require("../models/Logs"); // Import Logs model
 
-// Utility function to compute initials from a name
+// Fonction utilitaire pour calculer les initiales à partir d'un nom
 const getInitials = (name) => {
   if (!name) return "";
   const parts = name.split(" ");
@@ -22,18 +21,9 @@ const createSlotAdmin = async (req, res) => {
     const newSlot = new Slots(slotData);
     await newSlot.save();
 
-    // Log slot creation
-    await Logs.create({
-      actionType: "SLOT_CREATION",
-      user: req.user.id,
-      description: `Slot ${newSlot.exchangeNumber} created`,
-      relatedEntity: { entityType: "Slots", entityId: newSlot._id },
-      metadata: { exchangeNumber: newSlot.exchangeNumber, status: newSlot.status },
-    });
-
     res.status(201).json(newSlot);
   } catch (error) {
-    console.error("Error creating slot:", error);
+    console.error("Erreur lors de la création du créneau :", error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -75,17 +65,9 @@ const getAllSlotsAdmin = async (req, res) => {
       __v: slot.__v,
     }));
 
-    // Log slot read action
-    await Logs.create({
-      actionType: "SLOT_READ",
-      user: req.user.id,
-      description: `User fetched ${slots.length} slots`,
-      metadata: { slotCount: slots.length.toString() },
-    });
-
     res.json(transformedSlots);
   } catch (error) {
-    console.error("Error fetching all slots:", error);
+    console.error("Erreur lors de la récupération de tous les créneaux :", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -98,33 +80,18 @@ const getSlotsByClient = async (req, res) => {
       .populate("client", "name email")
       .populate("consultants", "name");
 
-    // Check if slots exist
+    // Vérifier si des créneaux existent
     if (!slots || slots.length === 0) {
-      // Log slot read action (no slots found)
-      await Logs.create({
-        actionType: "SLOT_READ",
-        user: clientId,
-        description: `User fetched 0 slots`,
-        metadata: { slotCount: "0" },
-      });
       return res
         .status(404)
-        .json({ message: "No slots found for this client" });
+        .json({ message: "Aucun créneau trouvé pour ce client" });
     }
 
-    // Log slot read action
-    await Logs.create({
-      actionType: "SLOT_READ",
-      user: clientId,
-      description: `User fetched ${slots.length} slots`,
-      metadata: { slotCount: slots.length.toString() },
-    });
-
-    // Return the slots
+    // Retourner les créneaux
     res.status(200).json(slots);
   } catch (error) {
-    console.error("Error fetching slots:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Erreur lors de la récupération des créneaux :", error);
+    res.status(500).json({ message: "Erreur du serveur", error: error.message });
   }
 };
 
@@ -134,28 +101,12 @@ const getSlotAdmin = async (req, res) => {
       .populate("client")
       .populate("consultants");
     if (!slot) {
-      // Log slot read action (not found)
-      await Logs.create({
-        actionType: "SLOT_READ",
-        user: req.user.id,
-        description: `User attempted to fetch slot ${req.params.id} but it was not found`,
-        metadata: { slotId: req.params.id },
-      });
-      return res.status(404).json({ message: "Slot not found" });
+      return res.status(404).json({ message: "Créneau non trouvé" });
     }
-
-    // Log slot read action
-    await Logs.create({
-      actionType: "SLOT_READ",
-      user: req.user.id,
-      description: `User fetched slot ${slot.exchangeNumber}`,
-      relatedEntity: { entityType: "Slots", entityId: slot._id },
-      metadata: { exchangeNumber: slot.exchangeNumber },
-    });
 
     res.json(slot);
   } catch (error) {
-    console.error("Error fetching slot:", error);
+    console.error("Erreur lors de la récupération du créneau :", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -173,21 +124,12 @@ const updateSlotDetails = async (req, res) => {
     });
 
     if (!slot) {
-      return res.status(404).json({ message: "Slot not found" });
+      return res.status(404).json({ message: "Créneau non trouvé" });
     }
-
-    // Log slot update action
-    await Logs.create({
-      actionType: "SLOT_UPDATE",
-      user: req.user.id,
-      description: `Slot ${slot.exchangeNumber} updated with selected time slot and status Confirmé`,
-      relatedEntity: { entityType: "Slots", entityId: slot._id },
-      metadata: { exchangeNumber: slot.exchangeNumber, status: "Confirmé" },
-    });
 
     res.json(slot);
   } catch (error) {
-    console.error("Error updating slot details:", error);
+    console.error("Erreur lors de la mise à jour des détails du créneau :", error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -196,21 +138,12 @@ const deleteSlotAdmin = async (req, res) => {
   try {
     const slot = await Slots.findByIdAndDelete(req.params.id);
     if (!slot) {
-      return res.status(404).json({ message: "Slot not found" });
+      return res.status(404).json({ message: "Créneau non trouvé" });
     }
 
-    // Log slot deletion action
-    await Logs.create({
-      actionType: "SLOT_DELETION",
-      user: req.user.id,
-      description: `Slot ${slot.exchangeNumber} deleted`,
-      relatedEntity: { entityType: "Slots", entityId: slot._id },
-      metadata: { exchangeNumber: slot.exchangeNumber },
-    });
-
-    res.json({ message: "Slot deleted" });
+    res.json({ message: "Créneau supprimé" });
   } catch (error) {
-    console.error("Error deleting slot:", error);
+    console.error("Erreur lors de la suppression du créneau :", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -219,24 +152,15 @@ const updateSlotStatus = async (req, res) => {
   try {
     const slot = await Slots.findById(req.params.id);
     if (!slot) {
-      return res.status(404).json({ message: "Slot not found" });
+      return res.status(404).json({ message: "Créneau non trouvé" });
     }
     const oldStatus = slot.status;
     slot.status = req.body.status;
     await slot.save();
 
-    // Log slot status update action
-    await Logs.create({
-      actionType: "SLOT_UPDATE",
-      user: req.user.id,
-      description: `Slot ${slot.exchangeNumber} status updated from ${oldStatus} to ${slot.status}`,
-      relatedEntity: { entityType: "Slots", entityId: slot._id },
-      metadata: { exchangeNumber: slot.exchangeNumber, oldStatus, newStatus: slot.status },
-    });
-
     res.json(slot);
   } catch (error) {
-    console.error("Error updating slot status:", error);
+    console.error("Erreur lors de la mise à jour du statut du créneau :", error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -245,14 +169,14 @@ const getAllConsultantsSlotsById = async (req, res) => {
   try {
     const userId = req.params.id;
 
-    // Ensure the requested user ID matches the authenticated client
+    // Vérifier que l'ID de l'utilisateur requis correspond au client authentifié
     if (userId !== req.user.id) {
       return res
         .status(403)
-        .json({ message: "Forbidden: You can only access your own data" });
+        .json({ message: "Interdit : Vous ne pouvez accéder qu'à vos propres données" });
     }
 
-    // Fetch all slots created by this user
+    // Récupérer tous les créneaux créés par cet utilisateur
     const slots = await Slots.find({ createdBy: userId })
       .populate({
         path: "consultants",
@@ -264,17 +188,10 @@ const getAllConsultantsSlotsById = async (req, res) => {
       .lean();
 
     if (!slots || slots.length === 0) {
-      // Log slot read action (no slots found)
-      await Logs.create({
-        actionType: "SLOT_READ",
-        user: userId,
-        description: `User fetched 0 slots`,
-        metadata: { slotCount: "0" },
-      });
-      return res.status(404).json({ message: "No slots found for this user" });
+      return res.status(404).json({ message: "Aucun créneau trouvé pour cet utilisateur" });
     }
 
-    // Transform the slots to include necessary fields
+    // Transformer les créneaux pour inclure les champs nécessaires
     const transformedSlots = slots.map((slot) => ({
       _id: slot._id,
       exchangeNumber: slot.exchangeNumber,
@@ -300,18 +217,10 @@ const getAllConsultantsSlotsById = async (req, res) => {
       __v: slot.__v,
     }));
 
-    // Log slot read action
-    await Logs.create({
-      actionType: "SLOT_READ",
-      user: userId,
-      description: `User fetched ${slots.length} slots`,
-      metadata: { slotCount: slots.length.toString() },
-    });
-
     res.status(200).json(transformedSlots);
   } catch (error) {
-    console.error("Error fetching slots:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Erreur lors de la récupération des créneaux :", error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 

@@ -1,8 +1,7 @@
 const Consultant = require("../models/Consultant");
 const SavedConsultant = require("../models/SavedConsultant");
-const Logs = require("../models/Logs"); // Import Logs model
 
-// Helper function to abbreviate the name
+// Fonction utilitaire pour abréger le nom
 const abbreviateName = (fullName) => {
   if (!fullName || typeof fullName !== "string") return null;
   const trimmed = fullName.trim();
@@ -16,22 +15,22 @@ const getConsultantClient = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Fetch saved consultants for this user
+    // Récupérer les consultants enregistrés pour cet utilisateur
     const savedConsultants = await SavedConsultant.find({ client: userId }).select('consultant');
     const savedConsultantSet = new Set(savedConsultants.map(sc => sc.consultant.toString()));
 
-    // Fetch consultants with status "Qualifié" and populate Profile
+    // Récupérer les consultants avec le statut "Qualifié" et peupler le Profil
     const consultants = await Consultant.find({ status: "Qualifié" }).populate("Profile");
 
-    // Filter out consultants with name "Not Specified"
+    // Filtrer les consultants avec le nom "Non spécifié"
     const filteredConsultants = consultants.filter(consultant => {
       const name = consultant.Profile?.Name;
-      return name && name !== "Not Specified";
+      return name && name !== "Non spécifié";
     });
 
-    // Map the data to the desired output format
+    // Mapper les données au format de sortie souhaité
     const result = filteredConsultants.map(consultant => ({
-      _id: consultant._id,  // Use consultant._id
+      _id: consultant._id,  // Utiliser consultant._id
       profileid: consultant.Profile._id,
       Name: consultant.Profile ? abbreviateName(consultant.Profile.Name) : null,
       Age: consultant.Age,
@@ -41,20 +40,12 @@ const getConsultantClient = async (req, res) => {
       AnnéeExperience: consultant.Profile ? consultant.Profile.AnnéeExperience : null,
       Skills: consultant.Profile ? consultant.Profile.Skills : [],
       TjmOrSalary: consultant.TjmOrSalary,
-      isSaved: savedConsultantSet.has(consultant._id.toString())  // Check against consultant._id
+      isSaved: savedConsultantSet.has(consultant._id.toString())  // Vérifier avec consultant._id
     }));
-
-    // Log the consultant read action
-    await Logs.create({
-      actionType: "CONSULTANT_READ",
-      user: userId,
-      description: `User fetched ${result.length} qualified consultants`,
-      metadata: { consultantCount: result.length.toString() },
-    });
 
     res.json(result);
   } catch (error) {
-    console.error("Error in getConsultantClient:", error);
+    console.error("Erreur dans getConsultantClient :", error);
     res.status(500).json({ message: error.message });
   }
 };
