@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Consultant = require("../models/Consultant");
 const Besion = require("../models/Besion");
 const Slot = require("../models/Slots");
+const Requests = require("../models/Requests");
 
 const getAllLogs = async (req, res) => {
   try {
@@ -205,6 +206,22 @@ const getAllNumbers = async (req, res) => {
   }
 };
 
+const getAllRequests = async (req, res) => {
+  try {
+    const requests = await Requests.find().sort({ createdAt: -1 });
+    return res.status(200).json({
+      message: "Requests retrieved successfully",
+      data: requests,
+    });
+  } catch (error) {
+    console.error("Error retrieving requests:", error);
+    return res.status(500).json({
+      message: "Failed to retrieve requests",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllLogs,
   getAllUsers,
@@ -212,4 +229,6 @@ module.exports = {
   updateUser,
   deleteUser,
   getAllNumbers,
+  getAllRequests
+
 };

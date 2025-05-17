@@ -24,6 +24,7 @@ app.use(
       "https://datamedconnect.com",
       "https://admin.datamedconnect.com",
       "http://localhost:3001",
+      "http://localhost:3002",
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],

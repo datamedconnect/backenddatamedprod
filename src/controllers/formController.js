@@ -184,10 +184,10 @@ const handleDemoForm = async (req, res) => {
   const { companyName, email, questions } = req.body;
 
   // Input validation
-  if (!companyName || !email) {
+  if (!companyName || !email || !questions) {
     return res
       .status(400)
-      .json({ message: "Company name and email are required" });
+      .json({ message: "Company name, email, and questions are required" });
   }
 
   const adminEmail = "datamedconnect@consultingdatamed.com";
@@ -217,8 +217,7 @@ const handleDemoForm = async (req, res) => {
           <!-- Main content table -->
           <table
             width="100%"
-            cellpadding="0"
-            cellspacing="0"
+            cellpadding="0" cellspacing="0"
             border="0"
             style="
               max-width: 600px;
@@ -280,7 +279,7 @@ const handleDemoForm = async (req, res) => {
                     <td style="font-weight: bold; padding: 5px 10px; width: 30%;">
                       Questions ou commentaires :
                     </td>
-                    <td style="padding: 5px 10px;">${questions || "Aucun"}</td>
+                    <td style="padding: 5px 10px;">${questions}</td>
                   </tr>
                 </table>
               </td>
@@ -339,12 +338,22 @@ const handleDemoForm = async (req, res) => {
     `;
 
   try {
+    // Send the email
     await sendEmail(adminEmail, subject, html);
-    return res.status(200).json({ message: "Email sent successfully" });
+
+    // Save the data to MongoDB
+    const newRequest = new Requests({
+      companyName,
+      email,
+      commentaires: questions,
+    });
+    await newRequest.save();
+
+    return res.status(200).json({ message: "Email sent and data saved successfully" });
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error processing request:", error);
     return res.status(500).json({
-      message: "Failed to send email",
+      message: "Failed to process request",
       error: error.message,
     });
   }
