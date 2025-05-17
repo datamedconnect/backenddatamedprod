@@ -140,11 +140,120 @@ const getConsultantAdmin = async (req, res) => {
   }
 };
 
+// const getAllConsultantsAdmin = async (req, res) => {
+//   try {
+//     const userId = req.user.id; // ID de l'utilisateur authentifié
+//     console.log(userId)
+//     // Extraire les paramètres de requête
+//     const search = req.query.search || "";
+//     const phone = req.query.phone || "";
+//     const status = req.query.status || "Tous";
+//     const experience = req.query.experience || "Tous";
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 15;
+//     const skip = (page - 1) * limit;
+
+//     // Construire les conditions de correspondance pour le filtrage
+//     const matchConditions = [];
+
+//     if (search) {
+//       matchConditions.push({
+//         $or: [
+//           { Email: { $regex: search, $options: "i" } },
+//           { "profile.Name": { $regex: search, $options: "i" } },
+//         ],
+//       });
+//     }
+
+//     if (phone) {
+//       matchConditions.push({ Phone: { $regex: phone, $options: "i" } });
+//     }
+
+//     if (status !== "Tous") {
+//       if (status === "En Attente") {
+//         matchConditions.push({
+//           $or: [{ status: "En Attente" }, { status: { $exists: false } }],
+//         });
+//       } else {
+//         matchConditions.push({ status: status });
+//       }
+//     }
+
+//     if (experience !== "Tous") {
+//       let expCondition;
+//       if (experience.endsWith("+")) {
+//         const minExp = parseInt(experience.slice(0, -1), 10);
+//         expCondition = { "profile.AnnéeExperience": { $gte: minExp } };
+//       } else {
+//         const [minExp, maxExp] = experience.split("-").map(Number);
+//         expCondition = {
+//           "profile.AnnéeExperience": { $gte: minExp, $lte: maxExp },
+//         };
+//       }
+//       matchConditions.push(expCondition);
+//     }
+
+//     // Définir le pipeline d'agrégation
+//     const pipeline = [
+//       {
+//         $lookup: {
+//           from: "profileconsultants", // Assurez-vous que cela correspond au nom de votre collection ProfileConsultant
+//           localField: "Profile",
+//           foreignField: "_id",
+//           as: "profile",
+//         },
+//       },
+//       { $unwind: "$profile" }, // Dérouler le tableau profile pour accéder aux champs
+//       // Ajouter un filtre pour exclure les profils avec Name: "Non spécifié"
+//       { $match: { "profile.Name": { $ne: "Non spécifié" } } },
+//     ];
+
+//     // Appliquer des conditions de correspondance supplémentaires si elles existent
+//     if (matchConditions.length > 0) {
+//       pipeline.push({ $match: { $and: matchConditions } });
+//     }
+
+//     pipeline.push({
+//       $facet: {
+//         metadata: [{ $count: "total" }],
+//         data: [{ $sort: { createdAt: -1 } }, { $skip: skip }, { $limit: limit }],
+//       },
+//     });
+
+//     // Exécuter l'agrégation
+//     const result = await Consultant.aggregate(pipeline);
+
+//     const total = result[0].metadata[0] ? result[0].metadata[0].total : 0;
+//     const consultants = result[0].data;
+
+//     // Transformer les données pour le frontend
+//     const consultantList = consultants.map((consultant) => ({
+//       _id: consultant.profile._id.toString(), // ID du profil
+//       id: consultant._id.toString(), // ID du consultant
+//       Name: consultant.profile.Name,
+//       Experience: consultant.profile.AnnéeExperience,
+//       Email: consultant.Email,
+//       TjmOrSalary: consultant.TjmOrSalary,
+//       Phone: consultant.Phone,
+//       createdAt: consultant.createdAt,
+//       status: consultant.status || "En Attente",
+//     }));
+
+//     res.status(200).json({
+//       consultants: consultantList,
+//       total,
+//     });
+//   } catch (error) {
+//     console.error("Erreur lors de la récupération des consultants :", error);
+//     res.status(500).json({ message: "Erreur du serveur" });
+//   }
+// };
+
 const getAllConsultantsAdmin = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
+    const userId = req.user.id;
+    console.log("Step 1: Authenticated user ID:", userId);
 
-    // Extraire les paramètres de requête
     const search = req.query.search || "";
     const phone = req.query.phone || "";
     const status = req.query.status || "Tous";
@@ -152,10 +261,17 @@ const getAllConsultantsAdmin = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 15;
     const skip = (page - 1) * limit;
+    console.log("Step 2: Query parameters:", {
+      search,
+      phone,
+      status,
+      experience,
+      page,
+      limit,
+      skip,
+    });
 
-    // Construire les conditions de correspondance pour le filtrage
     const matchConditions = [];
-
     if (search) {
       matchConditions.push({
         $or: [
@@ -164,11 +280,9 @@ const getAllConsultantsAdmin = async (req, res) => {
         ],
       });
     }
-
     if (phone) {
       matchConditions.push({ Phone: { $regex: phone, $options: "i" } });
     }
-
     if (status !== "Tous") {
       if (status === "En Attente") {
         matchConditions.push({
@@ -178,7 +292,6 @@ const getAllConsultantsAdmin = async (req, res) => {
         matchConditions.push({ status: status });
       }
     }
-
     if (experience !== "Tous") {
       let expCondition;
       if (experience.endsWith("+")) {
@@ -192,43 +305,48 @@ const getAllConsultantsAdmin = async (req, res) => {
       }
       matchConditions.push(expCondition);
     }
+    console.log("Step 3: Match conditions:", matchConditions);
 
-    // Définir le pipeline d'agrégation
     const pipeline = [
       {
         $lookup: {
-          from: "profileconsultants", // Assurez-vous que cela correspond au nom de votre collection ProfileConsultant
+          from: "profileconsultants",
           localField: "Profile",
           foreignField: "_id",
           as: "profile",
         },
       },
-      { $unwind: "$profile" }, // Dérouler le tableau profile pour accéder aux champs
-      // Ajouter un filtre pour exclure les profils avec Name: "Non spécifié"
+      { $unwind: "$profile" },
       { $match: { "profile.Name": { $ne: "Non spécifié" } } },
     ];
-
-    // Appliquer des conditions de correspondance supplémentaires si elles existent
     if (matchConditions.length > 0) {
       pipeline.push({ $match: { $and: matchConditions } });
     }
-
     pipeline.push({
       $facet: {
         metadata: [{ $count: "total" }],
-        data: [{ $sort: { createdAt: -1 } }, { $skip: skip }, { $limit: limit }],
+        data: [
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limit },
+        ],
       },
     });
+    console.log(
+      "Step 4: Aggregation pipeline:",
+      JSON.stringify(pipeline, null, 2)
+    );
 
-    // Exécuter l'agrégation
     const result = await Consultant.aggregate(pipeline);
+    console.log("Step 5: Aggregation result:", JSON.stringify(result, null, 2));
+
     const total = result[0].metadata[0] ? result[0].metadata[0].total : 0;
     const consultants = result[0].data;
+    console.log("Step 6: Consultants count:", consultants.length);
 
-    // Transformer les données pour le frontend
     const consultantList = consultants.map((consultant) => ({
-      _id: consultant.profile._id.toString(), // ID du profil
-      id: consultant._id.toString(), // ID du consultant
+      _id: consultant.profile._id.toString(),
+      id: consultant._id.toString(),
       Name: consultant.profile.Name,
       Experience: consultant.profile.AnnéeExperience,
       Email: consultant.Email,
@@ -237,17 +355,17 @@ const getAllConsultantsAdmin = async (req, res) => {
       createdAt: consultant.createdAt,
       status: consultant.status || "En Attente",
     }));
+    console.log("Step 7: Transformed consultant list:", consultantList);
 
     res.status(200).json({
       consultants: consultantList,
       total,
     });
   } catch (error) {
-    console.error("Erreur lors de la récupération des consultants :", error);
+    console.error("Error in getAllConsultantsAdmin:", error);
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
-
 const createConsultantAdmin = async (req, res) => {
   try {
     const userId = req.user.id; // ID de l'utilisateur authentifié
@@ -309,8 +427,12 @@ const createConsultantAdmin = async (req, res) => {
 
     // Valider les champs requis
     if (!email || !phone) {
-      console.log("Étape 9 : Échec de la validation - Email ou téléphone manquant");
-      return res.status(400).json({ message: "L'email et le téléphone sont requis" });
+      console.log(
+        "Étape 9 : Échec de la validation - Email ou téléphone manquant"
+      );
+      return res
+        .status(400)
+        .json({ message: "L'email et le téléphone sont requis" });
     }
 
     // Poursuivre avec la création du profil
@@ -347,21 +469,31 @@ const createConsultantAdmin = async (req, res) => {
     console.log("Étape 14 : Traitement du fichier PDF");
     if (req.file) {
       if (req.file.size > 50 * 1024 * 1024) {
-        console.log("Étape 15 : La taille du fichier dépasse la limite de 50 Mo");
-        return res
-          .status(400)
-          .json({ message: "Fichier trop volumineux. La taille maximale est de 50 Mo." });
+        console.log(
+          "Étape 15 : La taille du fichier dépasse la limite de 50 Mo"
+        );
+        return res.status(400).json({
+          message: "Fichier trop volumineux. La taille maximale est de 50 Mo.",
+        });
       }
 
       const pdfText = await extractTextFromPDF(req.file.buffer);
-      console.log("Étape 16 : Texte du PDF extrait, longueur :", pdfText.length);
+      console.log(
+        "Étape 16 : Texte du PDF extrait, longueur :",
+        pdfText.length
+      );
 
       const cvDataString = await grokService.extractCVData(pdfText);
-      console.log("Étape 17 : Données du CV extraites par Grok :", cvDataString);
+      console.log(
+        "Étape 17 : Données du CV extraites par Grok :",
+        cvDataString
+      );
 
       if (!cvDataString || typeof cvDataString !== "string") {
         console.log("Étape 18 : Données du CV invalides de Grok");
-        throw new Error("Données du CV invalides retournées par le service Grok");
+        throw new Error(
+          "Données du CV invalides retournées par le service Grok"
+        );
       }
 
       // Nettoyer la chaîne cvDataString pour extraire uniquement l'objet JSON
@@ -372,10 +504,16 @@ const createConsultantAdmin = async (req, res) => {
             .replace(/```json\n?/, "")
             .replace(/\n?```/, "")
             .trim();
-      console.log("Étape 18.5 : Chaîne de données du CV nettoyée :", cleanedCvDataString);
+      console.log(
+        "Étape 18.5 : Chaîne de données du CV nettoyée :",
+        cleanedCvDataString
+      );
 
       const cvData = JSON.parse(cleanedCvDataString);
-      console.log("Étape 19 : Données du CV analysées :", JSON.stringify(cvData, null, 2));
+      console.log(
+        "Étape 19 : Données du CV analysées :",
+        JSON.stringify(cvData, null, 2)
+      );
 
       const profileData = { ...cvData, consultantId: consultant._id };
       await profileService.updateProfile(profile._id, profileData);
@@ -397,9 +535,9 @@ const createConsultantAdmin = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur dans createConsultantAdmin :", error.stack);
-    return res
-      .status(500)
-      .json({ message: "Erreur lors du traitement de la requête : " + error.message });
+    return res.status(500).json({
+      message: "Erreur lors du traitement de la requête : " + error.message,
+    });
   }
 };
 
@@ -410,7 +548,9 @@ const uploadCV = async (req, res) => {
 
     // Valider les champs requis
     if (!email || !phone) {
-      return res.status(400).json({ message: "L'email et le téléphone sont requis" });
+      return res
+        .status(400)
+        .json({ message: "L'email et le téléphone sont requis" });
     }
 
     const defaultProfileData = {
@@ -578,7 +718,10 @@ const updateConsultantStatus = async (req, res) => {
     if (error.name === "ValidationError") {
       return res.status(400).json({ message: error.message });
     }
-    console.error("Erreur lors de la mise à jour du statut du consultant :", error);
+    console.error(
+      "Erreur lors de la mise à jour du statut du consultant :",
+      error
+    );
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
@@ -630,7 +773,10 @@ const updateConsultantDetails = async (req, res) => {
     if (error.name === "ValidationError") {
       return res.status(400).json({ message: error.message });
     }
-    console.error("Erreur lors de la mise à jour des détails du consultant :", error);
+    console.error(
+      "Erreur lors de la mise à jour des détails du consultant :",
+      error
+    );
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };

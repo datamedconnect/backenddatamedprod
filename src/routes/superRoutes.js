@@ -47,7 +47,12 @@ router.get(
 router.get("/allBesion", authenticate, isSuper, besionController.getAllBesionSuper);
 
 router.get("/numbers", authenticate, isSuper, superController.getAllNumbers);
-
+router.delete(
+  "/deleteConsultant/:id",
+  authenticate,
+  isSuper,
+  superController.deleteConsultant
+);
 
 
 router.delete(

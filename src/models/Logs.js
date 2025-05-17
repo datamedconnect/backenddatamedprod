@@ -27,7 +27,8 @@ const logsSchema = new mongoose.Schema(
         "LECTURE_ADMIN_CONSULTANTS", // Récupération des consultants par un administrateur (nouveau)
         "LECTURE_REQUETE_ECHANGE", // Récupération des requêtes d'échange (nouveau)
         "ACTION_INCONNUE",
-        "MISE_A_JOUR_DETAILS_CONSULTANT", // Mise à jour des détails d'un consultant (TjmOrSalary, disponibilité) (nouveau)
+        "MISE_A_JOUR_DETAILS_CONSULTANT",
+        "SUPPRESSION_CONSULTANT", // Mise à jour des détails d'un consultant (TjmOrSalary, disponibilité) (nouveau)
       ],
     },
     user: {

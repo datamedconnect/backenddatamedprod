@@ -4,13 +4,13 @@ const Consultant = require("../models/Consultant");
 const Besion = require("../models/Besion");
 const Slot = require("../models/Slots");
 const Requests = require("../models/Requests");
+const mongoose = require("mongoose");
 
 const getAllLogs = async (req, res) => {
   try {
     const { date } = req.query;
     let logs;
     if (date) {
-      // Parse the date and create start and end of the day
       const start = new Date(date);
       start.setHours(0, 0, 0, 0);
       const end = new Date(date);
@@ -35,7 +35,7 @@ const getAllLogs = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select(
-      "email role name companyName createdAt status" // Include status
+      "email role name companyName createdAt status"
     );
     res.json(users);
   } catch (error) {
@@ -70,7 +70,7 @@ const createUser = async (req, res) => {
       role: user.role,
       name: user.name,
       companyName: user.companyName,
-      status: user.status, // Add this
+      status: user.status,
     };
     res.json(userData);
   } catch (error) {
@@ -90,26 +90,25 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const { id } = req.params;
-  const updateData = req.body; // Contains status from frontend
+  const updateData = req.body;
   try {
     const user = await User.findByIdAndUpdate(id, updateData, { new: true });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    // Include status in the response
     res.json({
       _id: user._id,
       email: user.email,
       role: user.role,
       name: user.name,
       companyName: user.companyName,
-      status: user.status, // Add this
+      status: user.status,
       createdAt: user.createdAt,
     });
   } catch (error) {
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((val) => val.message);
-      console.log("Validation error details:", messages); // Log validation errors
+      console.log("Validation error details:", messages);
       return res
         .status(400)
         .json({ message: "Validation error", errors: messages });
@@ -121,6 +120,7 @@ const updateUser = async (req, res) => {
     }
   }
 };
+
 const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
@@ -137,7 +137,6 @@ const deleteUser = async (req, res) => {
 
 const getAllNumbers = async (req, res) => {
   try {
-    // Basic counts
     const clientCount = await User.countDocuments({ role: "client" });
     const adminCount = await User.countDocuments({ role: "admin" });
     const consultantCount = await Consultant.countDocuments();
@@ -148,7 +147,6 @@ const getAllNumbers = async (req, res) => {
     const slotConfirmeCount = await Slot.countDocuments({ status: "Confirmé" });
     const slotReporteCount = await Slot.countDocuments({ status: "Reporté" });
 
-    // Calculate total status counts for all consultants (for pie chart)
     const totalStatusCounts = await Consultant.aggregate([
       {
         $group: {
@@ -158,16 +156,12 @@ const getAllNumbers = async (req, res) => {
       },
     ]);
 
-    // Define all possible statuses
     const possibleStatuses = ["Qualifié", "Non Qualifié", "En Attente"];
-
-    // Format totalStatusCounts to include all statuses, defaulting to 0 if not present
     const formattedTotalStatusCounts = possibleStatuses.map((status) => ({
       status,
       count: totalStatusCounts.find((item) => item._id === status)?.count || 0,
     }));
 
-    // Aggregate daily consultant creation counts (for line chart)
     const dailyCounts = await Consultant.aggregate([
       {
         $group: {
@@ -178,17 +172,15 @@ const getAllNumbers = async (req, res) => {
         },
       },
       {
-        $sort: { _id: 1 }, // Sort by date ascending
+        $sort: { _id: 1 },
       },
     ]);
 
-    // Format dailyCounts for the frontend
     const formattedDailyCounts = dailyCounts.map((item) => ({
-      date: item._id, // Date in 'YYYY-MM-DD' format
-      count: item.count, // Number of consultants created on that date
+      date: item._id,
+      count: item.count,
     }));
 
-    // Send response with all data
     res.json({
       clients: clientCount,
       admins: adminCount,
@@ -222,6 +214,38 @@ const getAllRequests = async (req, res) => {
   }
 };
 
+const deleteConsultant = async (req, res) => {
+  try {
+    const userId = req.user.id; // Authenticated superadmin's ID
+    const consultantId = req.params.id; // Consultant ID from route parameters
+
+    // Validate the consultant ID
+    if (!mongoose.Types.ObjectId.isValid(consultantId)) {
+      return res.status(400).json({ message: "Invalid consultant ID" });
+    }
+
+    // Find and delete the consultant
+    const consultant = await Consultant.findByIdAndDelete(consultantId);
+    if (!consultant) {
+      return res.status(404).json({ message: "Consultant not found" });
+    }
+
+    // Log the deletion action
+    await Logs.create({
+      actionType: "SUPPRESSION_CONSULTANT",
+      user: userId,
+      description: `Consultant with ID ${consultantId} deleted`,
+      relatedEntity: { entityType: "Consultant", entityId: consultantId },
+      metadata: { consultantId },
+    });
+
+    res.json({ message: "Consultant deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting consultant:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   getAllLogs,
   getAllUsers,
@@ -229,6 +253,6 @@ module.exports = {
   updateUser,
   deleteUser,
   getAllNumbers,
-  getAllRequests
-
+  getAllRequests,
+  deleteConsultant,
 };
