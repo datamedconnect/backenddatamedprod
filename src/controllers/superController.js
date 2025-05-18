@@ -11,19 +11,21 @@ const getAllLogs = async (req, res) => {
     const { date } = req.query;
     let logs;
     if (date) {
-      const start = new Date(date);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(date);
-      end.setHours(23, 59, 59, 999);
+      const [year, month, day] = date.split('-').map(Number); // Convert strings to numbers
+      const start = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      const end = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      console.log(`Fetching logs from ${start.toISOString()} to ${end.toISOString()}`);
       logs = await Logs.find({
         createdAt: { $gte: start, $lte: end },
       })
         .populate("user", "email")
         .sort({ createdAt: -1 });
+      console.log(`Found ${logs.length} logs for ${date}`);
     } else {
       logs = await Logs.find()
         .populate("user", "email")
         .sort({ createdAt: -1 });
+      console.log(`Found ${logs.length} logs (no date filter)`);
     }
     res.json(logs);
   } catch (error) {

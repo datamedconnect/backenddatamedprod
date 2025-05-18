@@ -1,20 +1,18 @@
 const jwt = require("jsonwebtoken");
 
+
 const authenticate = (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
   }
-
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = {
-      id: decoded.id,
-      role: decoded.role,
-    };
+    req.user = { id: decoded.id, role: decoded.role };
+    console.log("User authenticated:", req.user.id);
     next();
   } catch (error) {
+    console.error("Token verification failed:", error);
     res.status(401).json({ message: "Invalid token" });
   }
 };

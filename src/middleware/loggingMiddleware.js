@@ -274,18 +274,7 @@ const defaultActionTypes = {
   DELETE: "SUPPRESSION",
 };
 
-const loggingMiddleware = async (req, res, next) => {
-  console.log("Logging middleware called:", {
-    method: req.method,
-    path: req.path,
-    user: req.user,
-  });
-  if (!req.user || !req.user.id) {
-    console.log("Skipping logging: no user or user ID");
-    return next();
-  }
-  console.log("Creating log for:", { key, actionInfo });
-  const userId = req.user.id;
+const loggingMiddleware = (req, res, next) => {
   const method = req.method;
   const path = req.path;
 
@@ -316,6 +305,13 @@ const loggingMiddleware = async (req, res, next) => {
   };
 
   onFinished(res, async (err) => {
+    // Check for req.user after the request is processed
+    if (!req.user || !req.user.id) {
+      console.log("No user or user ID, not logging");
+      return;
+    }
+
+    const userId = req.user.id;
     try {
       const metadata = {};
       let description = "";

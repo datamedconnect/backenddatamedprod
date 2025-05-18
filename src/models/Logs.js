@@ -22,13 +22,14 @@ const logsSchema = new mongoose.Schema(
         "MISE_A_JOUR_UTILISATEUR", // Mise à jour du profil utilisateur
         "AJOUT_INTÉGRATION", // Ajout d'une intégration de service (par exemple, Google)
         "LECTURE_CONSULTANT", // Récupération des consultants qualifiés
-        "MISE_A_JOUR_STATUT_CONSULTANT", // Mise à jour du statut d'un consultant (nouveau)
-        "TÉLÉCHARGEMENT_CV", // Téléchargement d'un CV (nouveau)
-        "LECTURE_ADMIN_CONSULTANTS", // Récupération des consultants par un administrateur (nouveau)
-        "LECTURE_REQUETE_ECHANGE", // Récupération des requêtes d'échange (nouveau)
+        "MISE_A_JOUR_STATUT_CONSULTANT", // Mise à jour du statut d'un consultant
+        "TÉLÉCHARGEMENT_CV", // Téléchargement d'un CV
+        "LECTURE_ADMIN_CONSULTANTS", // Récupération des consultants par un administrateur
+        "LECTURE_REQUETE_ECHANGE", // Récupération des requêtes d'échange
         "ACTION_INCONNUE",
         "MISE_A_JOUR_DETAILS_CONSULTANT",
-        "SUPPRESSION_CONSULTANT", // Mise à jour des détails d'un consultant (TjmOrSalary, disponibilité) (nouveau)
+        "SUPPRESSION_CONSULTANT",
+        "LECTURE_SUPER", // Corrected: Removed trailing comma
       ],
     },
     user: {
