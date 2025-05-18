@@ -310,7 +310,7 @@ const loggingMiddleware = (req, res, next) => {
       console.log("No user or user ID, not logging");
       return;
     }
-
+    console.log(`Logging action: ${actionType} for user ${req.user.id}`);
     const userId = req.user.id;
     try {
       const metadata = {};

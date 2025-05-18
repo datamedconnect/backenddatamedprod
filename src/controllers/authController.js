@@ -103,6 +103,11 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Mot de passe incorrect" });
     }
+    // Set req.user for the logging middleware
+    req.user = { id: user._id, role: user.role };
+    // Add console log to confirm login
+    console.log(`User logged in: email=${email}, id=${user._id}`);
+    
     const payload = { id: user._id, role: user.role, email: user.email };
     if (user.companyName) payload.companyName = user.companyName;
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
@@ -117,5 +122,4 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Erreur du serveur, veuillez réessayer plus tard" });
   }
 };
-
 module.exports = { signup, login };
