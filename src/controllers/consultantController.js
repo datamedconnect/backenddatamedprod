@@ -20,7 +20,6 @@ const extractTextFromPDF = async (buffer) => {
 
 const getConsultantAdmin = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
 
     // Récupérer tous les consultants et peupler le champ Profil
     const consultants = await Consultant.find().populate("Profile");
@@ -251,8 +250,7 @@ const getConsultantAdmin = async (req, res) => {
 
 const getAllConsultantsAdmin = async (req, res) => {
   try {
-    const userId = req.user.id;
-    console.log("Step 1: Authenticated user ID:", userId);
+
 
     const search = req.query.search || "";
     const phone = req.query.phone || "";
@@ -368,7 +366,6 @@ const getAllConsultantsAdmin = async (req, res) => {
 };
 const createConsultantAdmin = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
 
     // Journaliser le point d'entrée
     console.log("Étape 1 : Entrée dans createConsultantAdmin");
@@ -543,7 +540,6 @@ const createConsultantAdmin = async (req, res) => {
 
 const uploadCV = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
     const { email, phone, missionType, tjmOrSalary, location } = req.body;
 
     // Valider les champs requis
@@ -594,7 +590,6 @@ const getInitials = (name) => {
 
 const getexchangerequestAdmin = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
 
     const slots = await Slots.find({})
       .populate({
@@ -654,7 +649,6 @@ const getexchangerequestAdmin = async (req, res) => {
 
 const getConsultant = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
     const consultant = await consultantService.getConsultantById(req.params.id);
     if (!consultant) {
       return res.status(404).json({ message: "Consultant non trouvé" });
@@ -669,7 +663,6 @@ const getConsultant = async (req, res) => {
 
 const updateConsultant = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
     const { id } = req.params; // Obtenir l'ID du consultant depuis l'URL
     const updateData = req.body; // Obtenir les champs à mettre à jour depuis le corps de la requête
 
@@ -687,7 +680,6 @@ const updateConsultant = async (req, res) => {
 
 const updateConsultantStatus = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
     const { id } = req.params; // Extraire l'ID du consultant depuis les paramètres de l'URL
     const { status } = req.body; // Extraire le nouveau statut depuis le corps de la requête
 
@@ -728,7 +720,6 @@ const updateConsultantStatus = async (req, res) => {
 
 const updateConsultantDetails = async (req, res) => {
   try {
-    const userId = req.user.id; // ID de l'utilisateur authentifié
     const { id } = req.params; // ID du consultant depuis l'URL
     const { TjmOrSalary, available } = req.body; // Nouvelles valeurs depuis le corps de la requête
 
