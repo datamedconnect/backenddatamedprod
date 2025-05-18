@@ -263,6 +263,10 @@ const actionMappings = {
     actionType: "MISE_A_JOUR_DETAILS_CONSULTANT",
     entityType: "Consultant",
   },
+  "DELETE:/api/super/delete/:id": {
+    actionType: "SUPPRESSION_CRENEAU",
+    entityType: "Slots",
+  },
 };
 
 // Default action types for HTTP methods when no specific mapping exists
@@ -305,7 +309,6 @@ const loggingMiddleware = (req, res, next) => {
   };
 
   onFinished(res, async (err) => {
-    // Check for req.user after the request is processed
     if (!req.user || !req.user.id) {
       console.log("No user or user ID, not logging");
       return;
@@ -317,7 +320,6 @@ const loggingMiddleware = (req, res, next) => {
       let description = "";
       let relatedEntity = null;
 
-      // Extract entity ID and other details from response or request
       if (responseData) {
         if (responseData._id) {
           relatedEntity = { entityType, entityId: responseData._id };
@@ -346,7 +348,12 @@ const loggingMiddleware = (req, res, next) => {
         }
       }
 
-      // Generate description based on action type
+      // For deletions, set relatedEntity using req.params.id if available
+      if (method === "DELETE" && req.params.id && entityType) {
+        relatedEntity = { entityType, entityId: req.params.id };
+        metadata.entityId = req.params.id;
+      }
+
       switch (actionType) {
         case "CRÉATION_CRENEAU":
           description = `Créneau ${metadata.exchangeNumber || "nouveau"} créé`;
@@ -374,9 +381,7 @@ const loggingMiddleware = (req, res, next) => {
           }
           break;
         case "SUPPRESSION_CRENEAU":
-          description = `Créneau ${
-            metadata.exchangeNumber || req.params.id
-          } supprimé`;
+          description = `Créneau ${req.params.id} supprimé`;
           break;
         case "CRÉATION_CONSULTANT":
           description = `Consultant créé avec l'email ${
@@ -527,7 +532,6 @@ const loggingMiddleware = (req, res, next) => {
           metadata.path = path;
       }
 
-      // Add error details if the request failed
       if (err || res.statusCode >= 400) {
         description = `[Erreur] ${description}: ${
           metadata.error || err?.message || "Erreur inconnue"
@@ -535,7 +539,6 @@ const loggingMiddleware = (req, res, next) => {
         metadata.statusCode = res.statusCode.toString();
       }
 
-      // Create the log entry
       await Logs.create({
         actionType,
         user: userId,

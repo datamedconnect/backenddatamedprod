@@ -14,6 +14,7 @@ router.get("/getSuper", authenticate, isSuper, superController.getAllLogs);
 // Get all users
 router.get("/users", authenticate, isSuper, superController.getAllUsers);
 router.get("/demos", authenticate, isSuper, superController.getAllRequests);
+router.get("/delete/:id", authenticate, isSuper, superController.deleteslot);
 
 
 // Create a new user
