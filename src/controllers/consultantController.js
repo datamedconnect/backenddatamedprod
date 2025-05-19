@@ -250,8 +250,6 @@ const getConsultantAdmin = async (req, res) => {
 
 const getAllConsultantsAdmin = async (req, res) => {
   try {
-
-
     const search = req.query.search || "";
     const phone = req.query.phone || "";
     const status = req.query.status || "Tous";
@@ -303,7 +301,6 @@ const getAllConsultantsAdmin = async (req, res) => {
       }
       matchConditions.push(expCondition);
     }
-    console.log("Step 3: Match conditions:", matchConditions);
 
     const pipeline = [
       {
@@ -336,11 +333,9 @@ const getAllConsultantsAdmin = async (req, res) => {
     );
 
     const result = await Consultant.aggregate(pipeline);
-    console.log("Step 5: Aggregation result:", JSON.stringify(result, null, 2));
 
     const total = result[0].metadata[0] ? result[0].metadata[0].total : 0;
     const consultants = result[0].data;
-    console.log("Step 6: Consultants count:", consultants.length);
 
     const consultantList = consultants.map((consultant) => ({
       _id: consultant.profile._id.toString(),
@@ -353,7 +348,6 @@ const getAllConsultantsAdmin = async (req, res) => {
       createdAt: consultant.createdAt,
       status: consultant.status || "En Attente",
     }));
-    console.log("Step 7: Transformed consultant list:", consultantList);
 
     res.status(200).json({
       consultants: consultantList,
@@ -720,17 +714,19 @@ const updateConsultantStatus = async (req, res) => {
 
 const updateConsultantDetails = async (req, res) => {
   try {
-    const { id } = req.params; // ID du consultant depuis l'URL
-    const { TjmOrSalary, available } = req.body; // Nouvelles valeurs depuis le corps de la requête
+    const { id } = req.params;
+    console.log("ID du consultant :", id);
+    const { TjmOrSalary, available, datamedFamily } = req.body; 
+    console.log(TjmOrSalary, available, datamedFamily)
 
-    // S'assurer qu'au moins un champ est fourni
-    if (!TjmOrSalary && !available) {
+    // Check if at least one field is provided
+    if (!TjmOrSalary && !available && datamedFamily === undefined) {
       return res.status(400).json({
-        message: "Au moins un champ (TjmOrSalary ou disponible) est requis",
+        message: "Au moins un champ (TjmOrSalary, disponible ou datamedFamily) est requis",
       });
     }
 
-    // Construire l'objet de mise à jour
+    // Build the update object
     const updateData = {};
     if (TjmOrSalary) updateData.TjmOrSalary = TjmOrSalary;
     if (available) {
@@ -742,20 +738,21 @@ const updateConsultantDetails = async (req, res) => {
       }
       updateData.available = availableDate;
     }
+    if (datamedFamily !== undefined) updateData.datamedFamily = datamedFamily; // Add datamedFamily if provided
 
-    // Mettre à jour le consultant dans la base de données
+    // Update the consultant in the database
     const updatedConsultant = await Consultant.findByIdAndUpdate(
       id,
       updateData,
       { new: true, runValidators: true }
     );
 
-    // Vérifier si le consultant existe
+    // Check if the consultant exists
     if (!updatedConsultant) {
       return res.status(404).json({ message: "Consultant non trouvé" });
     }
 
-    // Retourner le consultant mis à jour
+    // Return the updated consultant
     res.status(200).json(updatedConsultant);
   } catch (error) {
     if (error.name === "CastError") {
@@ -771,7 +768,6 @@ const updateConsultantDetails = async (req, res) => {
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
-
 module.exports = {
   uploadCV,
   getConsultant,

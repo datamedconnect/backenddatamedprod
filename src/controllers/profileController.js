@@ -72,6 +72,8 @@ const processPDF = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
+
+    console.log("Received request to get profile with ID:", req.params.id);
     const profile = await profileService.getProfileById(req.params.id);
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });

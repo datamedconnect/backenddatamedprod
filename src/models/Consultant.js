@@ -13,6 +13,10 @@ const consultantSchema = new mongoose.Schema({
     enum: ["Qualifié", "Non Qualifié", "En Attente"],
     default: "En Attente"
   },
+  datamedFamily:{
+    type: Boolean,
+    default: false
+  },
   available: {
     type: Date // Corrected from 'date' to 'Date'
   }
