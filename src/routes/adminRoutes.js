@@ -80,6 +80,14 @@ router.post(
   isAdmin,
   besionController.createScore
 );
+
+router.get(
+  "/getallBesionbyId/:id",
+  authenticate,
+  isAdmin,
+  besionController.getAllBesionById
+);
+
 router.get(
   "/getAllConsultantsBesion/:id",
   authenticate,

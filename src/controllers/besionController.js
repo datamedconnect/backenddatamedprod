@@ -159,7 +159,7 @@ const getBesionById = async (req, res) => {
   try {
     const besion = await Besion.findById(req.params.id).populate({
       path: "consultantsScores.consultantId",
-      select: "_id Phone MissionType TjmOrSalary Age Location Profile status",
+      select: "_id Email Phone MissionType TjmOrSalary Age Location Profile status",
       populate: {
         path: "Profile",
         select: "_id Name Poste Location AnnéeExperience Skills",

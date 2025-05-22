@@ -28,7 +28,7 @@ const signup = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    const loginUrl = `https://datamedconnect.onrender.com/verify?token=${verificationToken}`;
+    const loginUrl = `https://datamedconnect.com/verify?token=${verificationToken}`;
 
     const html = `
       <!DOCTYPE html>

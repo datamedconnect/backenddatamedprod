@@ -30,6 +30,7 @@ const logsSchema = new mongoose.Schema(
         "MISE_A_JOUR_DETAILS_CONSULTANT",
         "SUPPRESSION_CONSULTANT",
         "LECTURE_SUPER",
+        "LECTURE_ADMIN",
       ],
     },
     user: {
