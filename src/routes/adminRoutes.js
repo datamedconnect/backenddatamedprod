@@ -95,4 +95,13 @@ router.get(
   besionController.getAllConsultantsBesionById
 );
 
+// New route for PDF data extraction
+router.post(
+  "/extract-pdf-data",
+  authenticate,
+  isClient,
+  upload.single("pdfFile"),
+  besionController.extractPdfData
+);
+
 module.exports = router;

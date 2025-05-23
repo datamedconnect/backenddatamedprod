@@ -31,6 +31,7 @@ const logsSchema = new mongoose.Schema(
         "SUPPRESSION_CONSULTANT",
         "LECTURE_SUPER",
         "LECTURE_ADMIN",
+        "CRÉATION_ADMIN",
       ],
     },
     user: {

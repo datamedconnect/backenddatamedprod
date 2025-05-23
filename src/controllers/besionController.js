@@ -5,6 +5,7 @@ const axios = require("axios");
 const fuzzball = require("fuzzball");
 const { isValidObjectId } = require("mongoose");
 const mongoose = require("mongoose");
+const pdfParse = require("pdf-parse");
 
 const createbesion = async (req, res) => {
   try {
@@ -95,9 +96,9 @@ const createbesionClient = async (req, res) => {
     }
     if (isNaN(Number(experience)) || isNaN(Number(prixAchat))) {
       console.log("Expérience ou prix d'achat invalide");
-      return res
-        .status(400)
-        .json({ message: "L'expérience et le prix d'achat doivent être des nombres" });
+      return res.status(400).json({
+        message: "L'expérience et le prix d'achat doivent être des nombres",
+      });
     }
 
     console.log("Création d'un nouveau Besoin");
@@ -123,7 +124,11 @@ const createbesionClient = async (req, res) => {
       besion: newBesion,
     });
   } catch (error) {
-    console.error("Erreur lors de la création du Besoin:", error.message, error.stack);
+    console.error(
+      "Erreur lors de la création du Besoin:",
+      error.message,
+      error.stack
+    );
     res
       .status(500)
       .json({ message: "Erreur interne du serveur", details: error.message });
@@ -159,7 +164,8 @@ const getBesionById = async (req, res) => {
   try {
     const besion = await Besion.findById(req.params.id).populate({
       path: "consultantsScores.consultantId",
-      select: "_id Email Phone MissionType TjmOrSalary Age Location Profile status",
+      select:
+        "_id Email Phone MissionType TjmOrSalary Age Location Profile status",
       populate: {
         path: "Profile",
         select: "_id Name Poste Location AnnéeExperience Skills",
@@ -269,9 +275,7 @@ Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100
     const score = grokResponse.score;
     if (typeof score !== "number" || score < 0 || score > 100) {
       console.log("Score invalide reçu :", score);
-      return res
-        .status(400)
-        .json({ message: "Score invalide reçu de l'API" });
+      return res.status(400).json({ message: "Score invalide reçu de l'API" });
     }
     console.log("Score extrait :", score);
 
@@ -326,9 +330,9 @@ const getAllConsultantsBesionById = async (req, res) => {
     console.log("ID d'utilisateur authentifié :", req.user.id);
 
     if (userId !== req.user.id) {
-      return res
-        .status(403)
-        .json({ message: "Interdit : Vous ne pouvez accéder qu'à vos propres données" });
+      return res.status(403).json({
+        message: "Interdit : Vous ne pouvez accéder qu'à vos propres données",
+      });
     }
 
     const besions = await Besion.find({ createdBy: userId });
@@ -468,7 +472,8 @@ Détails du Consultant :
 - Expérience : ${consultant.Profile?.AnnéeExperience || "N/A"}
 - Expériences professionnelles : ${
         consultant.Profile?.ExperienceProfessionnelle.map(
-          (exp) => `${exp.TitrePoste} chez ${exp.NomEntreprise} : ${exp.Context}`
+          (exp) =>
+            `${exp.TitrePoste} chez ${exp.NomEntreprise} : ${exp.Context}`
         ).join("; ") || "N/A"
       }
 - Formation : ${
@@ -519,7 +524,10 @@ Détails du Consultant :
           );
         }
       } catch (error) {
-        console.error(`Erreur lors de l'évaluation du consultant ${consultant._id} :`, error);
+        console.error(
+          `Erreur lors de l'évaluation du consultant ${consultant._id} :`,
+          error
+        );
       }
     });
 
@@ -586,6 +594,106 @@ const deleteBesion = async (req, res) => {
   }
 };
 
+const extractPdfData = async (req, res) => {
+  try {
+    console.log("User uploaded a PDF document for extraction");
+    if (!req.file) {
+      console.log("No PDF file uploaded");
+      return res.status(400).json({ message: "No PDF file uploaded" });
+    }
+
+    const pdfBuffer = req.file.buffer;
+    const data = await pdfParse(pdfBuffer);
+    const text = data.text;
+    console.log("Extracted PDF text:", text);
+
+    if (!text.trim()) {
+      console.log("No text extracted from PDF");
+      return res.status(400).json({ message: "No text extracted from PDF" });
+    }
+
+    const prompt = `
+Here is the text extracted from a PDF document. Extract the following fields and return them as a JSON object with the exact keys specified:
+- poste (job position, string)
+- experience (years of experience, number)
+- mission (mission description, string)
+- prixAchat (purchase price, number)
+- dateLimite (deadline date, string in YYYY-MM-DD format)
+
+If a field is not found, return an empty string or 0 for numbers. Ensure the response is a valid JSON object.
+
+Example response:
+{
+  "poste": "Developer",
+  "experience": 5,
+  "mission": "Develop web applications",
+  "prixAchat": 50000,
+  "dateLimite": "2025-12-31"
+}
+
+Text:
+${text}
+`;
+
+    const apiKey = process.env.GROK_API_KEY;
+    const response = await axios.post(
+      "https://api.x.ai/v1/chat/completions",
+      {
+        model: "grok-2-latest",
+        messages: [{ role: "user", content: prompt }],
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+      }
+    );
+
+    // Log the full response and message content for debugging
+    console.log("Raw GrokAPI response:", JSON.stringify(response.data, null, 2));
+    const messageContent = response.data.choices[0].message.content;
+    console.log("GrokAPI message content:", messageContent);
+
+    let extractedData;
+    try {
+      // Remove Markdown code block markers
+      const cleanedContent = messageContent
+        .replace(/^```json\n/, '') // Remove starting ```json
+        .replace(/\n```$/, '');    // Remove ending ```
+      console.log("Cleaned GrokAPI content:", cleanedContent);
+
+      // Parse the cleaned content as JSON
+      extractedData = JSON.parse(cleanedContent);
+    } catch (jsonError) {
+      console.error("Failed to parse response as JSON:", jsonError.message);
+      // Fallback: Try to extract key-value pairs from text
+      extractedData = {};
+      const lines = messageContent.split("\n");
+      lines.forEach((line) => {
+        const match = line.match(/^(poste|experience|mission|prixAchat|dateLimite):\s*(.+)$/i);
+        if (match) {
+          extractedData[match[1]] = match[2].trim();
+        }
+      });
+    }
+
+    const formattedData = {
+      poste: extractedData.poste || "",
+      experience: Number(extractedData.experience) || 0,
+      mission: extractedData.mission || "",
+      prixAchat: Number(extractedData.prixAchat) || 0,
+      dateLimite: extractedData.dateLimite || "",
+    };
+
+    console.log("Formatted extracted data:", formattedData);
+    res.status(200).json(formattedData);
+  } catch (error) {
+    console.error("Error extracting PDF data:", error.message);
+    res.status(500).json({ message: "Error extracting PDF data", error: error.message });
+  }
+};
+
 module.exports = {
   createbesion,
   getAllBesion,
@@ -597,4 +705,5 @@ module.exports = {
   createbesionClient,
   deleteBesion,
   getAllBesionSuper,
+  extractPdfData,
 };
