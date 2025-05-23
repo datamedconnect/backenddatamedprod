@@ -304,7 +304,7 @@ async function callGrokAPI(prompt) {
   const response = await axios.post(
     "https://api.x.ai/v1/chat/completions",
     {
-      model: "grok-2-latest",
+      model: "grok-3-mini",
       messages: [{ role: "user", content: prompt }],
     },
     {
@@ -492,7 +492,7 @@ Détails du Consultant :
         const response = await axios.post(
           "https://api.x.ai/v1/chat/completions",
           {
-            model: "grok-2-latest",
+            model: "grok-3-mini",
             messages: [{ role: "user", content: prompt }],
           },
           {
@@ -639,7 +639,7 @@ ${text}
     const response = await axios.post(
       "https://api.x.ai/v1/chat/completions",
       {
-        model: "grok-2-latest",
+        model: "grok-3-mini",
         messages: [{ role: "user", content: prompt }],
       },
       {

@@ -87,7 +87,7 @@ const extractCVData = async (pdfText) => {
       "https://api.x.ai/v1/chat/completions",
       {
         messages: aiMessages,
-        model: "grok-2-latest",
+        model: "grok-3-mini",
         stream: false,
         temperature: 0,
       },
