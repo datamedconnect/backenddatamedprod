@@ -5,6 +5,9 @@ const clientController = require("../controllers/clientController");
 const besionController = require("../controllers/besionController");
 const savedConsultantController = require("../controllers/savedConsultantController");
 const slotController = require("../controllers/slotController");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+
 
 router.get(
   "/rechercher",
@@ -87,5 +90,14 @@ router.get(
   isClient,
   slotController.getSlotsByClient
 );
+
+router.post(
+  "/extract-pdf-data",
+  authenticate,
+  isClient,
+  upload.single("pdfFile"),
+  besionController.extractPdfData
+);
+
 
 module.exports = router;

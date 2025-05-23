@@ -99,7 +99,7 @@ router.get(
 router.post(
   "/extract-pdf-data",
   authenticate,
-  isClient,
+  isAdmin,
   upload.single("pdfFile"),
   besionController.extractPdfData
 );
