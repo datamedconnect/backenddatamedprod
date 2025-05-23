@@ -492,7 +492,7 @@ Détails du Consultant :
         const response = await axios.post(
           "https://api.x.ai/v1/chat/completions",
           {
-            model: "grok-3-mini",
+            model: "grok-2-vision-1212",
             messages: [{ role: "user", content: prompt }],
           },
           {
