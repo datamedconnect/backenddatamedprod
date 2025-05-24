@@ -72,23 +72,24 @@ const processPDF = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-
     console.log("Received request to get profile with ID:", req.params.id);
     const profile = await profileService.getProfileById(req.params.id);
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
 
-    const consultant = await consultantService.getConsultantByProfileId(
-      req.params.id
-    );
+    const consultant = await consultantService.getConsultantByProfileId(req.params.id);
     if (!consultant) {
-      return res
-        .status(404)
-        .json({ message: "Consultant not found for this profile" });
+      return res.status(404).json({ message: "Consultant not found for this profile" });
     }
 
-    res.status(200).json({ profile, consultant });
+    // Explicitly ensure all fields, including Location, are returned
+    const consultantData = {
+      ...consultant.toJSON(), // Convert Mongoose document to plain object
+      Location: consultant.Location || [], // Ensure Location is included
+    };
+
+    res.status(200).json({ profile, consultant: consultantData });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

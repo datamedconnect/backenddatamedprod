@@ -657,17 +657,44 @@ const getConsultant = async (req, res) => {
 
 const updateConsultant = async (req, res) => {
   try {
-    const { id } = req.params; // Obtenir l'ID du consultant depuis l'URL
-    const updateData = req.body; // Obtenir les champs à mettre à jour depuis le corps de la requête
+    const { id } = req.params; // Get consultant ID from URL
+    const updateData = req.body; // Get fields to update from request body
+
+    // Log incoming request
+    console.log("Step: Received update request:", {
+      consultantId: id,
+      updateData,
+    });
+
+    // Map mobility to Location if present
+    if (updateData.mobility) {
+      updateData.Location = Array.isArray(updateData.mobility) ? updateData.mobility : [updateData.mobility];
+      delete updateData.mobility;
+      console.log("Step: Mapped mobility to Location:", updateData.Location);
+    }
+
+    // Fetch document before update for debugging
+    const preUpdateDoc = await consultantService.getConsultantById(id);
+    console.log("Step: Document before update:", {
+      _id: preUpdateDoc._id,
+      Location: preUpdateDoc.Location,
+    });
 
     const updatedConsultant = await consultantService.updateConsultant(
       id,
       updateData
     );
 
+    // Log updated document
+    console.log("Step: Updated consultant:", {
+      _id: updatedConsultant._id,
+      Location: updatedConsultant.Location,
+      updatedAt: updatedConsultant.updatedAt,
+    });
+
     res.status(200).json(updatedConsultant);
   } catch (error) {
-    console.error("Erreur dans updateConsultant :", error);
+    console.error("Erreur dans updateConsultant:", error);
     res.status(500).json({ message: error.message });
   }
 };
