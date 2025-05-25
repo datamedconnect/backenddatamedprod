@@ -8,6 +8,10 @@ const consultantSchema = new mongoose.Schema({
   Age: { type: Number, required: false },
   Location: [String], // Array of strings for multiple locations
   Profile: { type: mongoose.Schema.Types.ObjectId, ref: "ProfileConsultant" },
+  qualifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   status: {
     type: String,
     enum: ["Qualifié", "Non Qualifié", "En Attente"],
@@ -36,7 +40,7 @@ consultantSchema.pre('save', function(next) {
   next();
 });
 
-// Ensure updates to Location are arrays
+// Ensure updates to Location are arrays and log qualifiedBy
 consultantSchema.pre('findOneAndUpdate', function(next) {
   const update = this.getUpdate();
   if (update.Location && !Array.isArray(update.Location)) {
@@ -45,6 +49,9 @@ consultantSchema.pre('findOneAndUpdate', function(next) {
   } else if (update.Location === null || update.Location === undefined) {
     update.Location = [];
     console.log(`Pre-update: Set Location to empty array for update`);
+  }
+  if (update.qualifiedBy) {
+    console.log(`Pre-update: Setting qualifiedBy to ${update.qualifiedBy} for consultant ID ${this.getQuery()._id}`);
   }
   next();
 });

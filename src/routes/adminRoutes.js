@@ -33,7 +33,7 @@ router.get(
   consultantController.getexchangerequestAdmin
 );
 router.put(
-  "/consultants/:id/status", // New route for updating status
+  "/consultants/:id/status", 
   authenticate,
   isAdmin,
   consultantController.updateConsultantStatus

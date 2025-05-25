@@ -64,6 +64,10 @@ const slotsSchema = new mongoose.Schema(
       validate: [arrayLimit, "Time slots cannot exceed 3 entries"],
     },
     selectedTimeSlot: {
+      confirmedBy:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
       date: {
         type: Date,
       },

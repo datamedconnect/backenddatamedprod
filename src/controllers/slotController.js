@@ -114,26 +114,41 @@ const getSlotAdmin = async (req, res) => {
 const updateSlotDetails = async (req, res) => {
   try {
     const { selectedTimeSlot } = req.body;
+    console.log("Received request to update slot with ID:", req.params.id);
+    console.log("Selected time slot received:", selectedTimeSlot);
+
+    // Check if selectedTimeSlot and its confirmedBy property exist
+    if (!selectedTimeSlot || !selectedTimeSlot.confirmedBy) {
+      console.log("Missing required fields in request");
+      return res.status(400).json({ message: "Selected time slot and confirmedBy are required" });
+    }
+
+    // Prepare the data for the database update
     const updateData = {
-      selectedTimeSlot,
+      selectedTimeSlot: {
+        ...selectedTimeSlot,
+      },
       status: "Confirmé",
     };
+    console.log("Data to update in database:", updateData);
 
+    // Update the slot in the database
     const slot = await Slots.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
     });
 
     if (!slot) {
+      console.log("Slot not found for ID:", req.params.id);
       return res.status(404).json({ message: "Créneau non trouvé" });
     }
 
+    console.log("Slot updated successfully:", slot);
     res.json(slot);
   } catch (error) {
-    console.error("Erreur lors de la mise à jour des détails du créneau :", error);
+    console.error("Error during slot update:", error);
     res.status(400).json({ message: error.message });
   }
 };
-
 const deleteSlotAdmin = async (req, res) => {
   try {
     const slot = await Slots.findByIdAndDelete(req.params.id);

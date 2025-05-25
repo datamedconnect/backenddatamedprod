@@ -116,7 +116,7 @@ const login = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 8 * 60 * 60 * 1000,
     });
-    res.json({ token, role: user.role });
+    res.json({ token, role: user.role, id: user._id.toString() });
   } catch (error) {
     console.error("Erreur de connexion:", error);
     res.status(500).json({ message: "Erreur du serveur, veuillez réessayer plus tard" });

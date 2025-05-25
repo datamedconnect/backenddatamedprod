@@ -20,7 +20,6 @@ const extractTextFromPDF = async (buffer) => {
 
 const getConsultantAdmin = async (req, res) => {
   try {
-
     // Récupérer tous les consultants et peupler le champ Profil
     const consultants = await Consultant.find().populate("Profile");
     const users = await User.countDocuments({ role: "client" });
@@ -248,6 +247,9 @@ const getConsultantAdmin = async (req, res) => {
 //   }
 // };
 
+const escapeRegex = (string) =>
+  string.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+
 const getAllConsultantsAdmin = async (req, res) => {
   try {
     const search = req.query.search || "";
@@ -277,7 +279,8 @@ const getAllConsultantsAdmin = async (req, res) => {
       });
     }
     if (phone) {
-      matchConditions.push({ Phone: { $regex: phone, $options: "i" } });
+      const escapedPhone = escapeRegex(phone);
+      matchConditions.push({ Phone: { $regex: escapedPhone, $options: "i" } });
     }
     if (status !== "Tous") {
       if (status === "En Attente") {
@@ -324,6 +327,20 @@ const getAllConsultantsAdmin = async (req, res) => {
           { $sort: { createdAt: -1 } },
           { $skip: skip },
           { $limit: limit },
+          {
+            $lookup: {
+              from: "users",
+              localField: "qualifiedBy",
+              foreignField: "_id",
+              as: "qualifiedByUser",
+            },
+          },
+          {
+            $unwind: {
+              path: "$qualifiedByUser",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
         ],
       },
     });
@@ -347,6 +364,7 @@ const getAllConsultantsAdmin = async (req, res) => {
       Phone: consultant.Phone,
       createdAt: consultant.createdAt,
       status: consultant.status || "En Attente",
+      qualifiedByName: consultant.qualifiedByUser?.name || "Non spécifié",
     }));
 
     res.status(200).json({
@@ -360,7 +378,6 @@ const getAllConsultantsAdmin = async (req, res) => {
 };
 const createConsultantAdmin = async (req, res) => {
   try {
-
     // Journaliser le point d'entrée
     console.log("Étape 1 : Entrée dans createConsultantAdmin");
 
@@ -584,7 +601,7 @@ const getInitials = (name) => {
 
 const getexchangerequestAdmin = async (req, res) => {
   try {
-
+    // Fetch slots and populate related fields, including confirmedBy in selectedTimeSlot
     const slots = await Slots.find({})
       .populate({
         path: "consultants",
@@ -597,11 +614,19 @@ const getexchangerequestAdmin = async (req, res) => {
         path: "client",
         select: "email role companyName name",
       })
+      .populate({
+        path: "createdBy",
+        select: "name",
+      })
+      .populate({
+        path: "selectedTimeSlot.confirmedBy", // Populate confirmedBy field
+        select: "name",
+      })
       .lean();
 
     console.log("Créneaux récupérés :", slots);
 
-    // Transformer les créneaux au format de sortie souhaité
+    // Transform the slots to include the creator's name and confirmedBy name
     const transformedSlots = slots.map((slot) => ({
       _id: slot._id,
       exchangeNumber: slot.exchangeNumber,
@@ -630,10 +655,21 @@ const getexchangerequestAdmin = async (req, res) => {
             role: slot.client.role,
           }
         : null,
-      selectedTimeSlot: slot.selectedTimeSlot,
+      createdByName: slot.createdBy?.name || "Unknown",
+      selectedTimeSlot: slot.selectedTimeSlot
+        ? {
+            date: slot.selectedTimeSlot.date,
+            day: slot.selectedTimeSlot.day,
+            startTime: slot.selectedTimeSlot.startTime,
+            finishTime: slot.selectedTimeSlot.finishTime,
+            confirmedByName:
+              slot.selectedTimeSlot.confirmedBy?.name || "Unknown", // Include the name instead of ID
+          }
+        : null,
       __v: slot.__v,
     }));
 
+    // Send the transformed slots as the response
     res.json(transformedSlots);
   } catch (error) {
     console.error("Erreur dans getexchangerequestAdmin :", error);
@@ -668,7 +704,9 @@ const updateConsultant = async (req, res) => {
 
     // Map mobility to Location if present
     if (updateData.mobility) {
-      updateData.Location = Array.isArray(updateData.mobility) ? updateData.mobility : [updateData.mobility];
+      updateData.Location = Array.isArray(updateData.mobility)
+        ? updateData.mobility
+        : [updateData.mobility];
       delete updateData.mobility;
       console.log("Step: Mapped mobility to Location:", updateData.Location);
     }
@@ -701,30 +739,37 @@ const updateConsultant = async (req, res) => {
 
 const updateConsultantStatus = async (req, res) => {
   try {
-    const { id } = req.params; // Extraire l'ID du consultant depuis les paramètres de l'URL
-    const { status } = req.body; // Extraire le nouveau statut depuis le corps de la requête
-
-    // Vérifier si le statut est fourni
-    if (!status) {
-      return res.status(400).json({ message: "Le statut est requis" });
-    }
-
-    // Mettre à jour le statut du consultant dans la base de données
-    const updatedConsultant = await Consultant.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true, runValidators: true } // Retourner le document mis à jour et appliquer la validation du schéma
+    console.log("Étape 1 : Entrée dans updateConsultantStatus");
+    const { id } = req.params;
+    console.log("Étape 2 : ID du consultant :", id);
+    const { status, qualifiedBy } = req.body; // Extract both fields
+    console.log(
+      "Étape 3 : Nouveau statut :",
+      status,
+      "qualifiedBy:",
+      qualifiedBy
     );
 
-    // Vérifier si le consultant existe
+    // Validate both fields
+    if (!status || !qualifiedBy) {
+      return res
+        .status(400)
+        .json({ message: "Le statut et qualifiedBy sont requis" });
+    }
+
+    // Update both fields in the database
+    const updatedConsultant = await Consultant.findByIdAndUpdate(
+      id,
+      { status, qualifiedBy },
+      { new: true, runValidators: true }
+    );
+
     if (!updatedConsultant) {
       return res.status(404).json({ message: "Consultant non trouvé" });
     }
 
-    // Envoyer le consultant mis à jour en réponse
     res.status(200).json(updatedConsultant);
   } catch (error) {
-    // Gérer les erreurs spécifiques de Mongoose
     if (error.name === "CastError") {
       return res.status(400).json({ message: "ID de consultant invalide" });
     }
@@ -743,13 +788,24 @@ const updateConsultantDetails = async (req, res) => {
   try {
     const { id } = req.params;
     console.log("ID du consultant :", id);
-    const { TjmOrSalary, available, datamedFamily } = req.body; 
-    console.log(TjmOrSalary, available, datamedFamily)
+    const { TjmOrSalary, available, datamedFamily, qualifiedBy } = req.body;
+    console.log("Received payload:", {
+      TjmOrSalary,
+      available,
+      datamedFamily,
+      qualifiedBy,
+    });
 
     // Check if at least one field is provided
-    if (!TjmOrSalary && !available && datamedFamily === undefined) {
+    if (
+      !TjmOrSalary &&
+      !available &&
+      datamedFamily === undefined &&
+      !qualifiedBy
+    ) {
       return res.status(400).json({
-        message: "Au moins un champ (TjmOrSalary, disponible ou datamedFamily) est requis",
+        message:
+          "Au moins un champ (TjmOrSalary, disponible, datamedFamily ou qualifiedBy) est requis",
       });
     }
 
@@ -765,7 +821,8 @@ const updateConsultantDetails = async (req, res) => {
       }
       updateData.available = availableDate;
     }
-    if (datamedFamily !== undefined) updateData.datamedFamily = datamedFamily; // Add datamedFamily if provided
+    if (datamedFamily !== undefined) updateData.datamedFamily = datamedFamily;
+    if (qualifiedBy) updateData.qualifiedBy = qualifiedBy; // Add qualifiedBy if provided
 
     // Update the consultant in the database
     const updatedConsultant = await Consultant.findByIdAndUpdate(
@@ -778,6 +835,14 @@ const updateConsultantDetails = async (req, res) => {
     if (!updatedConsultant) {
       return res.status(404).json({ message: "Consultant non trouvé" });
     }
+
+    console.log("Updated consultant document:", {
+      _id: updatedConsultant._id,
+      qualifiedBy: updatedConsultant.qualifiedBy,
+      TjmOrSalary: updatedConsultant.TjmOrSalary,
+      available: updatedConsultant.available,
+      datamedFamily: updatedConsultant.datamedFamily,
+    });
 
     // Return the updated consultant
     res.status(200).json(updatedConsultant);
@@ -795,6 +860,7 @@ const updateConsultantDetails = async (req, res) => {
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
+
 module.exports = {
   uploadCV,
   getConsultant,
