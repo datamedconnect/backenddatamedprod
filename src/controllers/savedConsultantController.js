@@ -85,6 +85,7 @@ const unsaveConsultant = async (req, res) => {
   }
 };
 
+
 const getSavedProfileConsultant = async (req, res) => {
   try {
     const clientId = req.user.id;
@@ -103,7 +104,8 @@ const getSavedProfileConsultant = async (req, res) => {
     const result = consultants
       .filter((c) => c && c.Profile)
       .map((consultant) => ({
-        _id: consultant._id.toString(),
+        _id: consultant._id.toString(), // Consultant's ID as _id
+        profileId: consultant.Profile._id.toString(), // Profile's ID as profileId
         Name: getInitials(consultant.Profile.Name || ""),
         Poste: consultant.Profile.Poste || [],
         Location: consultant.Profile.Location || "Inconnu",

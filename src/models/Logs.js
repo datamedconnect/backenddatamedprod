@@ -32,7 +32,8 @@ const logsSchema = new mongoose.Schema(
         "LECTURE_SUPER",
         "LECTURE_ADMIN",
         "CRÉATION_ADMIN",
-        "SUPPRESSION_SLOT", // Fixed typo: Removed trailing comma
+        "SUPPRESSION_SLOT", 
+        "LECTURE_CONSULTANT_ENREGISTRÉ"
       ],
     },
     user: {
