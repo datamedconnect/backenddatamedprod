@@ -105,7 +105,6 @@ const login = async (req, res) => {
     }
     // Set req.user for the logging middleware
     req.user = { id: user._id, role: user.role };
-    // Add console log to confirm login
     console.log(`User logged in: email=${email}, id=${user._id}`);
     
     const payload = { id: user._id, role: user.role, email: user.email };
@@ -116,7 +115,8 @@ const login = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 8 * 60 * 60 * 1000,
     });
-    res.json({ token, role: user.role, id: user._id.toString() });
+    // Return only the token
+    res.json({ token });
   } catch (error) {
     console.error("Erreur de connexion:", error);
     res.status(500).json({ message: "Erreur du serveur, veuillez réessayer plus tard" });
