@@ -5,6 +5,9 @@ const Besion = require("../models/Besion");
 const Slot = require("../models/Slots");
 const Requests = require("../models/Requests");
 const mongoose = require("mongoose");
+const ics = require("ics");
+const { v4: uuidv4 } = require("uuid"); 
+
 
 const getAllLogs = async (req, res) => {
   try {
@@ -256,20 +259,12 @@ const deleteslot = async (req, res) => {
     if (!slot) {
       return res.status(404).json({ message: "Slot not found" });
     }
-    await Logs.create({
-      actionType: "SUPPRESSION_SLOT",
-      user: req.user.id,
-      description: `Slot with ID ${id} deleted`,
-      relatedEntity: { entityType: "Slot", entityId: id },
-      metadata: { slotId: id },
-    });
     res.json({ message: "Slot deleted successfully" });
   } catch (error) {
     console.error("Error deleting slot:", error);
     res.status(500).json({ message: "Error deleting slot" });
   }
 };
-
 module.exports = {
   getAllLogs,
   getAllUsers,

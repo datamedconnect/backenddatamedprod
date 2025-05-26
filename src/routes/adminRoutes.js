@@ -4,6 +4,7 @@ const { authenticate, isAdmin, isClient } = require("../middleware/auth");
 const consultantController = require("../controllers/consultantController");
 const slotController = require("../controllers/slotController");
 const besionController = require("../controllers/besionController");
+const superController = require("../controllers/superController");
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -103,5 +104,7 @@ router.post(
   upload.single("pdfFile"),
   besionController.extractPdfData
 );
+
+
 
 module.exports = router;

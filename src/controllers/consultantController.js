@@ -624,7 +624,6 @@ const getexchangerequestAdmin = async (req, res) => {
       })
       .lean();
 
-    console.log("Créneaux récupérés :", slots);
 
     // Transform the slots to include the creator's name and confirmedBy name
     const transformedSlots = slots.map((slot) => ({

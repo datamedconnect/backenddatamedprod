@@ -71,7 +71,7 @@ const actionMappings = {
   "POST:/api/consultants": {
     actionType: "TÉLÉCHARGEMENT_CV",
     entityType: "Consultant",
-  }, // Assuming this is the uploadCV route
+  },
 
   // Admin Routes
   "POST:/api/admin/consultants": {

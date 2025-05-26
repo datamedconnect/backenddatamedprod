@@ -32,13 +32,16 @@
     "fs": "^0.0.1-security",
     "fuzzball": "^2.2.2",
     "googleapis": "^148.0.0",
+    "ical-generator": "^9.0.0",
+    "ics": "^3.8.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.3",
     "multer": "^1.4.5-lts.2",
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.3",
     "on-finished": "^2.4.1",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
