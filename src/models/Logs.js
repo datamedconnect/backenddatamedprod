@@ -33,7 +33,8 @@ const logsSchema = new mongoose.Schema(
         "LECTURE_ADMIN",
         "CRÉATION_ADMIN",
         "SUPPRESSION_SLOT", 
-        "LECTURE_CONSULTANT_ENREGISTRÉ"
+        "LECTURE_CONSULTANT_ENREGISTRÉ",
+        "CRÉATION_CLIENT"
       ],
     },
     user: {

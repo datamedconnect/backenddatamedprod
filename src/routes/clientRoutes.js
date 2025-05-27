@@ -99,5 +99,13 @@ router.post(
   besionController.extractPdfData
 );
 
+router.post(
+  "/sendsupport",
+  authenticate,
+  isClient,
+  clientController.sendsupport
+);
+
+
 
 module.exports = router;
