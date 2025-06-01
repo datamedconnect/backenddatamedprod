@@ -16,7 +16,6 @@ router.get("/users", authenticate, isSuper, superController.getAllUsers);
 router.get("/demos", authenticate, isSuper, superController.getAllRequests);
 router.delete("/delete/:id", authenticate, isSuper, superController.deleteslot);
 
-
 // Create a new user
 router.post(
   "/createuseradmin",
@@ -45,16 +44,20 @@ router.get(
   isSuper,
   consultantController.getAllConsultantsAdmin
 );
-router.get("/allBesion", authenticate, isSuper, besionController.getAllBesionSuper);
+router.get(
+  "/allBesion",
+  authenticate,
+  isSuper,
+  besionController.getAllBesionSuper
+);
 
-router.get("/numbers", authenticate, isSuper, superController.getAllNumbers);
+router.get("/numbers", authenticate, superController.getAllNumbers);
 router.delete(
   "/deleteConsultant/:id",
   authenticate,
   isSuper,
   superController.deleteConsultant
 );
-
 
 router.delete(
   "/deleteBesion/:id",
@@ -103,6 +106,5 @@ router.put(
   isSuper,
   consultantController.updateConsultantStatus
 );
-
 
 module.exports = router;

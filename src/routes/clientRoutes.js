@@ -12,7 +12,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get(
   "/rechercher",
   authenticate,
-  isClient,
+  // isClient,
   clientController.getConsultantClient
 );
 
@@ -26,54 +26,54 @@ router.get(
 router.get(
   "/savedprofileConsultants",
   authenticate,
-  isClient,
+  // isClient,
   savedConsultantController.getSavedProfileConsultant
 );
 // workrs juste fine
 router.post(
   "/consultantsauvegrader/:id",
   authenticate,
-  isClient,
+  // isClient,
   savedConsultantController.saveConsultant
 );
 // works juste fine
 router.delete(
   "/consultantsauvegrader/:id",
   authenticate,
-  isClient,
+  // isClient,
   savedConsultantController.unsaveConsultant
 );
 router.get(
   "/getallBesionbyId/:id",
   authenticate,
-  isClient,
+  // isClient,
   besionController.getAllBesionById
 );
 router.get(
   "/getBesion/:id",
   authenticate,
-  isClient,
+  // isClient,
   besionController.getBesionById
 );
 
 router.post(
   "/compareclient/:id",
   authenticate,
-  isClient,
+  // isClient,
   besionController.createScore
 );
 
 router.get(
   "/getAllMatchedConsultant/:id",
   authenticate,
-  isClient,
+  // isClient,
   besionController.getAllConsultantsBesionByIdClient
 );
 
 router.post(
   "/addBesion",
   authenticate,
-  isClient,
+  // isClient,
   besionController.createbesionClient
 );
 
@@ -87,14 +87,14 @@ router.post(
 router.get(
   "/getSlots",
   authenticate,
-  isClient,
+  // isClient,
   slotController.getSlotsByClient
 );
 
 router.post(
   "/extract-pdf-data",
   authenticate,
-  isClient,
+  // isClient,
   upload.single("pdfFile"),
   besionController.extractPdfData
 );
@@ -102,7 +102,7 @@ router.post(
 router.post(
   "/sendsupport",
   authenticate,
-  isClient,
+  // isClient,
   clientController.sendsupport
 );
 

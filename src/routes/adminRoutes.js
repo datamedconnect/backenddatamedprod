@@ -4,95 +4,95 @@ const { authenticate, isAdmin, isClient } = require("../middleware/auth");
 const consultantController = require("../controllers/consultantController");
 const slotController = require("../controllers/slotController");
 const besionController = require("../controllers/besionController");
-const superController = require("../controllers/superController");
+const clientController  = require("../controllers/clientController");
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post(
   "/consultants",
   authenticate,
-  isAdmin,
+  // isAdmin,
   upload.single("pdffile"),
   consultantController.createConsultantAdmin
 );
 router.get(
   "/acceuil",
   authenticate,
-  isAdmin,
+  // isAdmin,
   consultantController.getConsultantAdmin
 );
 router.get(
   "/allconsultants",
   authenticate,
-  isAdmin,
+  // isAdmin,
   consultantController.getAllConsultantsAdmin
 );
 router.get(
   "/exchangerequest",
   authenticate,
-  isAdmin,
+  // isAdmin,
   consultantController.getexchangerequestAdmin
 );
 router.put(
   "/consultants/:id/status", 
   authenticate,
-  isAdmin,
+  // isAdmin,
   consultantController.updateConsultantStatus
 );
 router.put(
   "/consultants/:id/details",
   authenticate,
-  isAdmin,
+  // isAdmin,
   consultantController.updateConsultantDetails
 );
 router.put(
   "/slots/:id/details",
   authenticate,
-  isAdmin,
+  // isAdmin,
   slotController.updateSlotDetails
 );
 router.put(
   "/slots/:id/status",
   authenticate,
-  isAdmin,
+  // isAdmin,
   slotController.updateSlotStatus
 )
 router.post(
   "/addBesion",
   authenticate,
-  isAdmin,
+  // isAdmin,
   besionController.createbesion
 );
 router.get(
   "/allBesion",
   authenticate,
-  isAdmin,
+  // isAdmin,
   besionController.getAllBesion
 );
 router.get(
   "/getBesion/:id",
   authenticate,
-  isAdmin,
+  // isAdmin,
   besionController.getBesionById
 );
 router.post(
   "/compare/:id",
   authenticate,
-  isAdmin,
+  // isAdmin,
   besionController.createScore
 );
 
 router.get(
   "/getallBesionbyId/:id",
   authenticate,
-  isAdmin,
+  // isAdmin,
   besionController.getAllBesionById
 );
 
 router.get(
   "/getAllConsultantsBesion/:id",
   authenticate,
-  isAdmin,
+  // isAdmin,
   besionController.getAllConsultantsBesionById
 );
 
@@ -100,11 +100,20 @@ router.get(
 router.post(
   "/extract-pdf-data",
   authenticate,
-  isAdmin,
+  // isAdmin,
   upload.single("pdfFile"),
   besionController.extractPdfData
 );
 
 
+router.post(
+  "/sendsupport",
+  authenticate,
+  // isAdmin,
+  clientController.sendsupport
+);
+
+
 
 module.exports = router;
+  

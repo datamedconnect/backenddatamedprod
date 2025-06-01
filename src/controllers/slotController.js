@@ -229,6 +229,7 @@ const getAllConsultantsSlotsById = async (req, res) => {
           }
         : null,
       selectedTimeSlot: slot.selectedTimeSlot,
+      createdAt: slot.createdAt, // Ajouter la date de création
       __v: slot.__v,
     }));
 

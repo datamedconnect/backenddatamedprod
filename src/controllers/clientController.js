@@ -17,37 +17,36 @@ const getConsultantClient = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Récupérer les consultants enregistrés pour cet utilisateur
     const savedConsultants = await SavedConsultant.find({ client: userId }).select('consultant');
     const savedConsultantSet = new Set(savedConsultants.map(sc => sc.consultant.toString()));
 
-    // Récupérer les consultants avec le statut "Qualifié" et peupler le Profil
-    const consultants = await Consultant.find({ status: "Qualifié" }).populate("Profile");
+    // Option 1: Fetch all consultants, or adjust the filter as needed
+    const consultants = await Consultant.find({}).populate("Profile");
+    console.log("Retrieved consultants:", consultants.map(c => ({ _id: c._id, Location: c.Location, Status: c.status })));
 
-    // Filtrer les consultants avec le nom "Non spécifié"
     const filteredConsultants = consultants.filter(consultant => {
       const name = consultant.Profile?.Name;
       return name && name !== "Non spécifié";
     });
+    console.log("Filtered consultants:", filteredConsultants.map(c => ({ _id: c._id, Location: c.Location })));
 
-    // Mapper les données au format de sortie souhaité
     const result = filteredConsultants.map(consultant => ({
-      _id: consultant._id,  // Utiliser consultant._id
+      _id: consultant._id,
       profileid: consultant.Profile._id,
       Name: consultant.Profile ? abbreviateName(consultant.Profile.Name) : null,
       Age: consultant.Age,
       Poste: consultant.Profile ? consultant.Profile.Poste : [],
       Available: consultant.available,
-      Location: consultant.Location,
+      Location: Array.isArray(consultant.Location) ? consultant.Location : [],
       AnnéeExperience: consultant.Profile ? consultant.Profile.AnnéeExperience : null,
       Skills: consultant.Profile ? consultant.Profile.Skills : [],
       TjmOrSalary: consultant.TjmOrSalary,
-      isSaved: savedConsultantSet.has(consultant._id.toString())  // Vérifier avec consultant._id
+      isSaved: savedConsultantSet.has(consultant._id.toString())
     }));
 
     res.json(result);
   } catch (error) {
-    console.error("Erreur dans getConsultantClient :", error);
+    console.error("Erreur :", error);
     res.status(500).json({ message: error.message });
   }
 };

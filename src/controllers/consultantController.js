@@ -624,8 +624,7 @@ const getexchangerequestAdmin = async (req, res) => {
       })
       .lean();
 
-
-    // Transform the slots to include the creator's name and confirmedBy name
+    // Transform the slots to include the creator's name, confirmedBy name, and createdAt
     const transformedSlots = slots.map((slot) => ({
       _id: slot._id,
       exchangeNumber: slot.exchangeNumber,
@@ -662,9 +661,10 @@ const getexchangerequestAdmin = async (req, res) => {
             startTime: slot.selectedTimeSlot.startTime,
             finishTime: slot.selectedTimeSlot.finishTime,
             confirmedByName:
-              slot.selectedTimeSlot.confirmedBy?.name || "Unknown", // Include the name instead of ID
+              slot.selectedTimeSlot.confirmedBy?.name || "Unknown",
           }
         : null,
+      createdAt: slot.createdAt, // Added createdAt field
       __v: slot.__v,
     }));
 

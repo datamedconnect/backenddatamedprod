@@ -14,10 +14,14 @@ const signup = async (req, res) => {
     if (role === "client" && !companyName) {
       return res
         .status(400)
-        .json({ message: "Le nom de l'entreprise est requis pour les clients" });
+        .json({
+          message: "Le nom de l'entreprise est requis pour les clients",
+        });
     }
     if (role === "admin" && !name) {
-      return res.status(400).json({ message: "Le nom est requis pour les administrateurs" });
+      return res
+        .status(400)
+        .json({ message: "Le nom est requis pour les administrateurs" });
     }
 
     const user = new User({ email, password, role, name, companyName });
@@ -91,35 +95,76 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  console.log("Login attempt:", { email, password });
   try {
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: "Adresse e-mail non trouvée" });
-    }
-    if (user.status !== "Activé") {
+    if (!user || user.status !== "Activé") {
       return res.status(401).json({ message: "Adresse e-mail non trouvée" });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Mot de passe incorrect" });
     }
-    // Set req.user for the logging middleware
-    req.user = { id: user._id, role: user.role };
-    console.log(`User logged in: email=${email}, id=${user._id}`);
-    
-    const payload = { id: user._id, role: user.role, email: user.email };
-    if (user.companyName) payload.companyName = user.companyName;
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "8h",
+    });
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 8 * 60 * 60 * 1000,
     });
-    // Return only the token
     res.json({ token });
   } catch (error) {
     console.error("Erreur de connexion:", error);
-    res.status(500).json({ message: "Erreur du serveur, veuillez réessayer plus tard" });
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
-module.exports = { signup, login };
+
+const getUserDetails = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select(
+      "role email companyName name"
+    );
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      id: user._id,
+      role: user.role,
+      email: user.email,
+      companyName: user.companyName,
+      name: user.name,
+    });
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    console.log("Reset password request:", { email, newPassword });
+    if (!email || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: "Email and new password are required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = newPassword; // Set the plain password here
+    await user.save(); // Pre-save hook will hash it once
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error(`Error resetting password: ${error.message}`);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { signup, login, getUserDetails, resetPassword };  

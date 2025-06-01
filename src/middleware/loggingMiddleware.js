@@ -279,23 +279,18 @@ const defaultActionTypes = {
 };
 
 const loggingMiddleware = (req, res, next) => {
-  const method = req.method;
+const method = req.method;
   const path = req.path;
 
-  // Normalize path for mapping (remove trailing slashes and IDs)
   const normalizedPath = path
     .replace(/\/[0-9a-fA-F]{24}/, "/:id")
     .replace(/\/$/, "");
   const key = `${method}:${normalizedPath}`;
 
-  // Determine action type and entity type
   let actionInfo = actionMappings[key];
   if (!actionInfo) {
     const entityType = getEntityType(normalizedPath);
-    const actionType = `${
-      defaultActionTypes[method] || "ACTION_INCONNUE"
-    }_${entityType.toUpperCase()}`;
-    actionInfo = { actionType, entityType };
+    actionInfo = { actionType: "ACTION_INCONNUE", entityType };
   }
 
   const { actionType, entityType } = actionInfo;
