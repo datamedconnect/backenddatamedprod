@@ -1,22 +1,24 @@
 const Logs = require("../models/Logs");
 const onFinished = require("on-finished");
 
-// Keywords for inferring entity types from paths
+// Liste des types d'entités autorisés par le schéma Logs
+const allowedEntityTypes = ["Slots", "Consultant", "Besion", "User", "SavedConsultant"];
+
+// Keywords pour déduire les types d'entités à partir des chemins
 const entityKeywords = {
   consultants: "Consultant",
   slots: "Slots",
   besions: "Besion",
+  besion: "Besion", // Ajouté pour les routes comme "getBesion"
   users: "User",
   "saved-consultants": "SavedConsultant",
   profile: "Profile",
   otp: "OTP",
   email: "Email",
-  client: "Client",
   super: "Super",
   admin: "Admin",
 };
 
-// Function to determine entityType based on path segments
 function getEntityType(path) {
   const segments = path.split("/").filter(Boolean);
   for (const segment of segments) {
@@ -24,10 +26,10 @@ function getEntityType(path) {
       return entityKeywords[segment];
     }
   }
-  return "Inconnu"; // Unknown entity as fallback
+  return "Inconnu";
 }
 
-// Mapping of HTTP methods and routes to action types and entities
+// Mapping des méthodes HTTP et routes vers les types d'actions et entités
 const actionMappings = {
   // Slot Routes
   "POST:/api/slots/create": {
@@ -269,7 +271,7 @@ const actionMappings = {
   },
 };
 
-// Default action types for HTTP methods when no specific mapping exists
+// Types d'actions par défaut pour les méthodes HTTP sans mappage spécifique
 const defaultActionTypes = {
   POST: "CRÉATION",
   GET: "LECTURE",
@@ -279,7 +281,7 @@ const defaultActionTypes = {
 };
 
 const loggingMiddleware = (req, res, next) => {
-const method = req.method;
+  const method = req.method;
   const path = req.path;
 
   const normalizedPath = path
@@ -295,7 +297,7 @@ const method = req.method;
 
   const { actionType, entityType } = actionInfo;
 
-  // Store original res.json to capture response data
+  // Stocker la fonction res.json originale pour capturer les données de réponse
   const originalJson = res.json;
   let responseData = null;
   res.json = function (data) {
@@ -316,7 +318,7 @@ const method = req.method;
       let relatedEntity = null;
 
       if (responseData) {
-        if (responseData._id) {
+        if (responseData._id && allowedEntityTypes.includes(entityType)) {
           relatedEntity = { entityType, entityId: responseData._id };
           metadata.entityId = responseData._id.toString();
         }
@@ -343,8 +345,8 @@ const method = req.method;
         }
       }
 
-      // For deletions, set relatedEntity using req.params.id if available
-      if (method === "DELETE" && req.params.id && entityType) {
+      // Pour les suppressions, définir relatedEntity avec req.params.id si disponible
+      if (method === "DELETE" && req.params.id && allowedEntityTypes.includes(entityType)) {
         relatedEntity = { entityType, entityId: req.params.id };
         metadata.entityId = req.params.id;
       }
@@ -538,7 +540,7 @@ const method = req.method;
         actionType,
         user: userId,
         description,
-        relatedEntity,
+        relatedEntity: relatedEntity || undefined, // Ne pas inclure si null
         metadata,
       });
     } catch (logError) {

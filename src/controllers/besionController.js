@@ -118,6 +118,13 @@ const createbesionClient = async (req, res) => {
     await newBesion.save();
     console.log("Besoin enregistré avec succès");
 
+    // Trigger matching process asynchronously without awaiting
+    console.log(
+      "Lancement du processus de matching pour le besoin:",
+      newBesion._id
+    );
+    triggerMatching({ params: { id: newBesion._id } }, { json: () => {} }); // Mock res object since we don’t need a response here
+
     console.log("Retour de la réponse de succès");
     res.status(201).json({
       message: "Besoin créé avec succès",
@@ -650,28 +657,29 @@ ${text}
       }
     );
 
-    // Log the full response and message content for debugging
-    console.log("Raw GrokAPI response:", JSON.stringify(response.data, null, 2));
+    console.log(
+      "Raw GrokAPI response:",
+      JSON.stringify(response.data, null, 2)
+    );
     const messageContent = response.data.choices[0].message.content;
     console.log("GrokAPI message content:", messageContent);
 
     let extractedData;
     try {
-      // Remove Markdown code block markers
       const cleanedContent = messageContent
-        .replace(/^```json\n/, '') // Remove starting ```json
-        .replace(/\n```$/, '');    // Remove ending ```
+        .replace(/^```json\n/, "")
+        .replace(/\n```$/, "");
       console.log("Cleaned GrokAPI content:", cleanedContent);
 
-      // Parse the cleaned content as JSON
       extractedData = JSON.parse(cleanedContent);
     } catch (jsonError) {
       console.error("Failed to parse response as JSON:", jsonError.message);
-      // Fallback: Try to extract key-value pairs from text
       extractedData = {};
       const lines = messageContent.split("\n");
       lines.forEach((line) => {
-        const match = line.match(/^(poste|experience|mission|prixAchat|dateLimite):\s*(.+)$/i);
+        const match = line.match(
+          /^(poste|experience|mission|prixAchat|dateLimite):\s*(.+)$/i
+        );
         if (match) {
           extractedData[match[1]] = match[2].trim();
         }
@@ -690,7 +698,191 @@ ${text}
     res.status(200).json(formattedData);
   } catch (error) {
     console.error("Error extracting PDF data:", error.message);
-    res.status(500).json({ message: "Error extracting PDF data", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error extracting PDF data", error: error.message });
+  }
+};
+
+const triggerMatching = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    console.log(`Récupération du Besoin avec l'ID : ${id}`);
+    let besion = await Besion.findById(id).exec();
+    if (!besion) {
+      console.log("Besoin non trouvé");
+      return res.status(404).json({ message: "Besoin non trouvé" });
+    }
+    console.log(`Besoin trouvé : ${besion._id}`);
+
+    console.log("Récupération de tous les consultants avec profils peuplés");
+    const consultants = await Consultant.find().populate("Profile").exec();
+    console.log(`Trouvé ${consultants.length} consultants`);
+
+    const compatibilityResults = [];
+    const evaluations = consultants.map(async (consultant) => {
+      console.log(`Évaluation du consultant : ${consultant._id}`);
+      const besionDetails = {
+        poste: besion.poste || "N/A",
+        mission: besion.mission || "N/A",
+      };
+      const consultantDetails = {
+        poste: consultant.Profile?.Poste || [],
+        skills: consultant.Profile?.Skills || [],
+        experienceProfessionnelle:
+          consultant.Profile?.ExperienceProfessionnelle || [],
+        formation: consultant.Profile?.Formation || [],
+        certification: consultant.Profile?.Certifications || [],
+      };
+
+      const prompt = `
+Pensez comme un recruteur et un gestionnaire d'acquisition technologique.
+Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
+
+- Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
+- Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
+- Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
+- Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
+
+Ne tenez pas compte des années d'expérience requises ou des années d'expérience du Consultant.
+Assurez-vous d'examiner chaque mot-clé et de calculer un score précis.
+
+Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
+
+**Besoin :**
+- Poste : ${besionDetails.poste}
+- Mission : ${besionDetails.mission}
+
+**Consultant :**
+- Poste : ${consultantDetails.poste.join(", ")}
+- Compétences : ${consultantDetails.skills.join(", ")}
+- Expérience professionnelle : ${
+        consultantDetails.experienceProfessionnelle.length > 0
+          ? consultantDetails.experienceProfessionnelle
+              .map(
+                (exp) =>
+                  `${exp.TitrePoste || "N/A"} chez ${
+                    exp.NomEntreprise || "N/A"
+                  } sur ${exp.Context || "N/A"} et ${
+                    exp.Réalisation || "N/A"
+                  } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`
+              )
+              .join("; ")
+          : "N/A"
+      }
+- Formation : ${consultantDetails.formation.join(", ") || "N/A"}
+- Certifications : ${consultantDetails.certification.join(", ") || "N/A"}
+`;
+
+      try {
+        console.log("Prompt pour l'API Grok :", prompt);
+        const response = await axios.post(
+          "https://api.x.ai/v1/chat/completions",
+          {
+            model: "grok-2-vision-1212",
+            messages: [{ role: "user", content: prompt }],
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.GROK_API_KEY}`,
+            },
+          }
+        );
+
+        console.log(
+          `Réponse brute pour le consultant ${consultant._id} :`,
+          response.data
+        );
+        const scoreText = response.data.choices[0].message.content.trim();
+
+        const scoreMatch = scoreText.match(/(\d+)%/);
+        const score = scoreMatch ? parseInt(scoreMatch[1], 10) : NaN;
+
+        if (!isNaN(score) && score >= 0 && score <= 100) {
+          compatibilityResults.push({
+            consultantId: consultant._id,
+            score: score,
+          });
+          console.log(`Score du consultant ${consultant._id} : ${score}`);
+        } else {
+          console.log(
+            `Score ignoré (invalide) pour le consultant ${consultant._id} : ${scoreText}`
+          );
+        }
+      } catch (error) {
+        console.error(
+          `Erreur lors de l'évaluation du consultant ${consultant._id} :`,
+          error.message
+        );
+      }
+    });
+
+    await Promise.all(evaluations);
+    console.log(
+      `Évalué ${compatibilityResults.length} consultants avec des scores valides`
+    );
+
+    // Re-fetch to avoid version conflicts
+    besion = await Besion.findById(id).exec();
+    if (!besion) {
+      console.log("Besoin non trouvé lors de la sauvegarde");
+      return res.status(404).json({ message: "Besoin non trouvé" });
+    }
+
+    besion.consultantsScores = compatibilityResults;
+    await besion.save();
+    console.log("Scores de compatibilité enregistrés dans le Besoin");
+
+    res.json({ message: "Matching completed successfully" });
+  } catch (error) {
+    console.error("Erreur dans triggerMatching :", error.message);
+    res
+      .status(500)
+      .json({ message: "Erreur du serveur", error: error.message });
+  }
+};
+
+const getBesionWithMatchingPost = async (req, res) => {
+  try {
+    const besion = await Besion.findById(req.params.id).populate({
+      path: "consultantsScores.consultantId",
+      select:
+        "_id Email Phone MissionType TjmOrSalary Age Location Profile status",
+      populate: {
+        path: "Profile",
+        select: "_id Name Poste Location AnnéeExperience Skills",
+      },
+    });
+    if (!besion) {
+      return res.status(404).json({ message: "Besoin non trouvé" });
+    }
+    res.status(200).json(besion);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur du serveur" });
+  }
+};
+
+const fetchBesionMatching = async (req, res) => {
+  try {
+    const besion = await Besion.findById(req.params.id).populate({
+      path: "consultantsScores.consultantId",
+      select:
+        "_id Email Phone MissionType TjmOrSalary Age Location Profile status",
+      populate: {
+        path: "Profile",
+        select: "_id Name Poste Location AnnéeExperience Skills",
+      },
+    });
+    if (!besion) {
+      return res.status(404).json({ message: "Besoin non trouvé" });
+    }
+    res.status(200).json(besion);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur du serveur" });
   }
 };
 
@@ -706,4 +898,7 @@ module.exports = {
   deleteBesion,
   getAllBesionSuper,
   extractPdfData,
+  triggerMatching,
+  getBesionWithMatchingPost,
+  fetchBesionMatching,
 };

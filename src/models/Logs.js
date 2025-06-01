@@ -17,6 +17,7 @@ const logsSchema = new mongoose.Schema(
         "MISE_A_JOUR_CONSULTANT",
         "CRÉATION_BESOIN",
         "MISE_A_JOUR_BESOIN",
+        "LECTURE_BESOIN",
         "CONSULTANT_ENREGISTRÉ",
         "CRÉATION_UTILISATEUR",
         "MISE_A_JOUR_UTILISATEUR",
@@ -36,7 +37,10 @@ const logsSchema = new mongoose.Schema(
         "LECTURE_CONSULTANT_ENREGISTRÉ",
         "CRÉATION_CLIENT",
         "LECTURE_TOUS_CONSULTANTS",
-        "LECTURE_CONSULTANT_CRENEAU"
+        "LECTURE_CONSULTANT_CRENEAU",
+        "LECTURE_CONSULTANT_BESOIN", // Ajouté
+        "LECTURE_CONSULTANT_CORRESPONDANT", // Ajouté
+        "CRÉATION_SCORE"
       ],
     },
     user: {
