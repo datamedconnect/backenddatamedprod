@@ -17,31 +17,59 @@ const createbesion = async (req, res) => {
       experience,
       mission,
       prixAchat,
-      consultantsScores,
+      consultantsScores = [], // Default to empty array if not provided
     } = req.body;
 
+    // Basic validation for required fields
+    if (!createdBy || !nomClient || !dateLimite || !poste || !experience || !mission || !prixAchat) {
+      console.log("Champs requis manquants");
+      return res.status(400).json({ message: "Champs requis manquants" });
+    }
+
+    // Validate that experience and prixAchat are numbers
+    if (isNaN(Number(experience)) || isNaN(Number(prixAchat))) {
+      console.log("Expérience ou prix d'achat invalide");
+      return res.status(400).json({
+        message: "L'expérience et le prix d'achat doivent être des nombres",
+      });
+    }
+
+    console.log("Création d'un nouveau Besoin");
     const newBesion = new Besion({
       createdBy,
       nomClient,
       dateLimite,
       poste,
-      experience,
+      experience: Number(experience),
       mission,
-      prixAchat,
+      prixAchat: Number(prixAchat),
       consultantsScores,
     });
 
+    console.log("Enregistrement du Besoin dans la base de données");
     await newBesion.save();
+    console.log("Besoin enregistré avec succès");
 
+    // Trigger matching process asynchronously without awaiting
+    console.log(
+      "Lancement du processus de matching pour le besoin:",
+      newBesion._id
+    );
+    triggerMatching({ params: { id: newBesion._id } }, { json: () => {} }); // Mock res object since we don’t need a response here
+
+    console.log("Retour de la réponse de succès");
     res
       .status(201)
       .json({ message: "Besoin créé avec succès", besion: newBesion });
   } catch (error) {
     if (error.name === "ValidationError") {
+      console.log("Erreur de validation:", error.message);
       return res.status(400).json({ message: error.message });
     }
-    console.error(error);
-    res.status(500).json({ message: "Erreur du serveur" });
+    console.error("Erreur lors de la création du Besoin:", error.message);
+    res
+      .status(500)
+      .json({ message: "Erreur du serveur", details: error.message });
   }
 };
 
@@ -237,43 +265,43 @@ const createScore = async (req, res) => {
     };
 
     const prompt = `
-Pensez comme un recruteur et un gestionnaire d'acquisition technologique.
-Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
+  Pensez comme un recruteur et un gestionnaire d'acquisition technologique.
+  Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
 
-- Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
-- Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
-- Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
-- Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
+  - Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
+  - Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
+  - Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
+  - Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
 
-Ne tenez pas compte des années d'expérience requises ou des années d'expérience du Consultant.
-Assurez-vous d'examiner chaque mot-clé et de calculer un score précis.
+  Ne tenez pas compte des années d'expérience requises ou des années d'expérience du Consultant.
+  Assurez-vous d'examiner chaque mot-clé et de calculer un score précis.
 
-Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
+  Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
 
-**Besoin :**
-- Poste : ${besionDetails.poste}
-- Mission : ${besionDetails.mission}
+  **Besoin :**
+  - Poste : ${besionDetails.poste}
+  - Mission : ${besionDetails.mission}
 
-**Consultant :**
-- Poste : ${consultantDetails.poste.join(", ")}
-- Compétences : ${consultantDetails.skills.join(", ")}
-- Expérience professionnelle : ${
-      consultantDetails.experienceProfessionnelle.length > 0
-        ? consultantDetails.experienceProfessionnelle
-            .map(
-              (exp) =>
-                `${exp.TitrePoste || "N/A"} chez ${
-                  exp.NomEntreprise || "N/A"
-                } sur ${exp.Context || "N/A"} et ${
-                  exp.Réalisation || "N/A"
-                } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`
-            )
-            .join("; ")
-        : "N/A"
-    }
-- Formation : ${consultantDetails.formation.join(", ") || "N/A"}
-- Certifications : ${consultantDetails.certification.join(", ") || "N/A"}
-`;
+  **Consultant :**
+  - Poste : ${consultantDetails.poste.join(", ")}
+  - Compétences : ${consultantDetails.skills.join(", ")}
+  - Expérience professionnelle : ${
+    consultantDetails.experienceProfessionnelle.length > 0
+      ? consultantDetails.experienceProfessionnelle
+          .map(
+            (exp) =>
+              `${exp.TitrePoste || "N/A"} chez ${
+                exp.NomEntreprise || "N/A"
+              } sur ${exp.Context || "N/A"} et ${
+                exp.Réalisation || "N/A"
+              } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`
+          )
+          .join("; ")
+      : "N/A"
+  }
+  - Formation : ${consultantDetails.formation.join(", ") || "N/A"}
+  - Certifications : ${consultantDetails.certification.join(", ") || "N/A"}
+  `;
     console.log("Prompt pour l'API Grok :", prompt);
 
     const grokResponse = await callGrokAPI(prompt);
@@ -458,42 +486,41 @@ const getAllConsultantsBesionByIdClient = async (req, res) => {
     const evaluations = consultants.map(async (consultant) => {
       console.log(`Évaluation du consultant : ${consultant._id}`);
       const prompt = `
-Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
+  Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
 
-- Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
-- Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
-- Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
-- Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
+  - Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
+  - Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
+  - Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
+  - Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
 
-Tenez compte des années d'expérience requises et des années d'expérience du Consultant.
+  Tenez compte des années d'expérience requises et des années d'expérience du Consultant.
 
-Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
+  Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
 
-Détails du Besoin :
-- Poste : ${besion.poste}
-- Mission : ${besion.mission}
+  Détails du Besoin :
+  - Poste : ${besion.poste}
+  - Mission : ${besion.mission}
 
-Détails du Consultant :
-- Poste : ${consultant.Profile?.Poste.join(", ") || "N/A"}
-- Compétences : ${consultant.Profile?.Skills.join(", ") || "N/A"}
-- Expérience : ${consultant.Profile?.AnnéeExperience || "N/A"}
-- Expériences professionnelles : ${
-        consultant.Profile?.ExperienceProfessionnelle.map(
-          (exp) =>
-            `${exp.TitrePoste} chez ${exp.NomEntreprise} : ${exp.Context}`
-        ).join("; ") || "N/A"
-      }
-- Formation : ${
-        consultant.Profile?.Formation.map(
-          (form) => `${form.Diplome} de ${form.Ecole}`
-        ).join(", ") || "N/A"
-      }
-- Certifications : ${
-        consultant.Profile?.Certifications.map(
-          (cert) => `${cert.Certif} de ${cert.Organisme}`
-        ).join(", ") || "N/A"
-      }
-`;
+  Détails du Consultant :
+  - Poste : ${consultant.Profile?.Poste.join(", ") || "N/A"}
+  - Compétences : ${consultant.Profile?.Skills.join(", ") || "N/A"}
+  - Expérience : ${consultant.Profile?.AnnéeExperience || "N/A"}
+  - Expériences professionnelles : ${
+    consultant.Profile?.ExperienceProfessionnelle.map(
+      (exp) => `${exp.TitrePoste} chez ${exp.NomEntreprise} : ${exp.Context}`
+    ).join("; ") || "N/A"
+  }
+  - Formation : ${
+    consultant.Profile?.Formation.map(
+      (form) => `${form.Diplome} de ${form.Ecole}`
+    ).join(", ") || "N/A"
+  }
+  - Certifications : ${
+    consultant.Profile?.Certifications.map(
+      (cert) => `${cert.Certif} de ${cert.Organisme}`
+    ).join(", ") || "N/A"
+  }
+  `;
 
       try {
         const response = await axios.post(
@@ -620,27 +647,27 @@ const extractPdfData = async (req, res) => {
     }
 
     const prompt = `
-Here is the text extracted from a PDF document. Extract the following fields and return them as a JSON object with the exact keys specified:
-- poste (job position, string)
-- experience (years of experience, number)
-- mission (mission description, string)
-- prixAchat (purchase price, number)
-- dateLimite (deadline date, string in YYYY-MM-DD format)
+  Here is the text extracted from a PDF document. Extract the following fields and return them as a JSON object with the exact keys specified:
+  - poste (job position, string)
+  - experience (years of experience, number)
+  - mission (mission description, string)
+  - prixAchat (purchase price, number)
+  - dateLimite (deadline date, string in YYYY-MM-DD format)
 
-If a field is not found, return an empty string or 0 for numbers. Ensure the response is a valid JSON object.
+  If a field is not found, return an empty string or 0 for numbers. Ensure the response is a valid JSON object.
 
-Example response:
-{
-  "poste": "Developer",
-  "experience": 5,
-  "mission": "Develop web applications",
-  "prixAchat": 50000,
-  "dateLimite": "2025-12-31"
-}
+  Example response:
+  {
+    "poste": "Developer",
+    "experience": 5,
+    "mission": "Develop web applications",
+    "prixAchat": 50000,
+    "dateLimite": "2025-12-31"
+  }
 
-Text:
-${text}
-`;
+  Text:
+  ${text}
+  `;
 
     const apiKey = process.env.GROK_API_KEY;
     const response = await axios.post(
@@ -737,43 +764,43 @@ const triggerMatching = async (req, res) => {
       };
 
       const prompt = `
-Pensez comme un recruteur et un gestionnaire d'acquisition technologique.
-Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
+  Pensez comme un recruteur et un gestionnaire d'acquisition technologique.
+  Analysez la compatibilité entre le Besoin et le Consultant suivants en fonction de ces critères :
 
-- Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
-- Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
-- Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
-- Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
+  - Similarité entre le poste du Besoin et le poste du Consultant (rôles exacts ou très similaires).
+  - Pertinence des compétences du Consultant par rapport à la mission du Besoin (évaluez dans quelle mesure les compétences sont directement applicables).
+  - Pertinence des expériences professionnelles du Consultant par rapport à la mission du Besoin (évaluez l'alignement avec les objectifs de la mission).
+  - Occurrence des mots-clés de la mission du Besoin dans le profil du Consultant (compétences, expériences professionnelles, formation et certifications).
 
-Ne tenez pas compte des années d'expérience requises ou des années d'expérience du Consultant.
-Assurez-vous d'examiner chaque mot-clé et de calculer un score précis.
+  Ne tenez pas compte des années d'expérience requises ou des années d'expérience du Consultant.
+  Assurez-vous d'examiner chaque mot-clé et de calculer un score précis.
 
-Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
+  Fournissez uniquement le score de compatibilité en pourcentage (0-100), où 100 % représente une correspondance parfaite et 0 % représente aucun alignement.
 
-**Besoin :**
-- Poste : ${besionDetails.poste}
-- Mission : ${besionDetails.mission}
+  **Besoin :**
+  - Poste : ${besionDetails.poste}
+  - Mission : ${besionDetails.mission}
 
-**Consultant :**
-- Poste : ${consultantDetails.poste.join(", ")}
-- Compétences : ${consultantDetails.skills.join(", ")}
-- Expérience professionnelle : ${
-        consultantDetails.experienceProfessionnelle.length > 0
-          ? consultantDetails.experienceProfessionnelle
-              .map(
-                (exp) =>
-                  `${exp.TitrePoste || "N/A"} chez ${
-                    exp.NomEntreprise || "N/A"
-                  } sur ${exp.Context || "N/A"} et ${
-                    exp.Réalisation || "N/A"
-                  } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`
-              )
-              .join("; ")
-          : "N/A"
-      }
-- Formation : ${consultantDetails.formation.join(", ") || "N/A"}
-- Certifications : ${consultantDetails.certification.join(", ") || "N/A"}
-`;
+  **Consultant :**
+  - Poste : ${consultantDetails.poste.join(", ")}
+  - Compétences : ${consultantDetails.skills.join(", ")}
+  - Expérience professionnelle : ${
+    consultantDetails.experienceProfessionnelle.length > 0
+      ? consultantDetails.experienceProfessionnelle
+          .map(
+            (exp) =>
+              `${exp.TitrePoste || "N/A"} chez ${
+                exp.NomEntreprise || "N/A"
+              } sur ${exp.Context || "N/A"} et ${
+                exp.Réalisation || "N/A"
+              } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`
+          )
+          .join("; ")
+      : "N/A"
+  }
+  - Formation : ${consultantDetails.formation.join(", ") || "N/A"}
+  - Certifications : ${consultantDetails.certification.join(", ") || "N/A"}
+  `;
 
       try {
         console.log("Prompt pour l'API Grok :", prompt);

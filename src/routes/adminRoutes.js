@@ -115,5 +115,27 @@ router.post(
 
 
 
+// **New Endpoints**
+router.post(
+  "/triggerMatching/:id",
+  authenticate,
+  besionController.triggerMatching
+);
+
+router.post(
+  "/getBesionWithMatching/:id",
+  authenticate,
+  besionController.getBesionWithMatchingPost
+);
+
+router.get(
+  "/fetchBesionMatching/:id",
+  authenticate,
+  besionController.fetchBesionMatching
+);
+
+
+
+
 module.exports = router;
   

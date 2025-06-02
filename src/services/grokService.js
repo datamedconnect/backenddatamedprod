@@ -29,7 +29,7 @@ const extractCVData = async (pdfText) => {
   "Location": "",  // Localisation actuelle du candidat, si mentionnée (ville, région ou pays)
   "AnnéeExperience": 0,  // Nombre total d’années d’expérience professionnelle, calculé à partir des dates des expériences ou estimé si nécessaire
   "Age": 0,  // Âge du candidat, calculé à partir de la date de naissance si disponible, sinon 0
-"Skills": [],  // Liste complète des compétences clés, extraites d’une section dédiée ET systématiquement complétées par les environnements techniques des expériences professionnelles  il doit Etre des Mot Clés si tu Trouves des Phrase Extracter des Mots Clés pas de phrase juste des Mots Clés
+"Skills": [],  // Liste complète des compétences clés, extraites d’une section dédiée ET systématiquement complétées par les environnements techniques des expériences professionnelles  il doit Etre des Mot Clés si tu Trouves des Phrase Extracter des Mots Clés pas de phrase juste des Mots Clés Make sure that you list all of the skills sometimes they are not in a section but in the experience or technical environment of the experiences, so you have to extract them from there as well.
 // "ExperienceProfessionnelle": [
     {
       "TitrePoste": "",  // Titre exact du poste occupé (ex. "Ingénieur Logiciel Senior")
