@@ -1,4 +1,6 @@
 const Slots = require("../models/Slots");
+const moment = require("moment"); // Add this import to fix the error
+const Notification = require("../models/Notification");
 
 // Fonction utilitaire pour calculer les initiales à partir d'un nom
 const getInitials = (name) => {
@@ -117,24 +119,20 @@ const updateSlotDetails = async (req, res) => {
     console.log("Received request to update slot with ID:", req.params.id);
     console.log("Selected time slot received:", selectedTimeSlot);
 
-    // Check if selectedTimeSlot and its confirmedBy property exist
     if (!selectedTimeSlot || !selectedTimeSlot.confirmedBy) {
       console.log("Missing required fields in request");
       return res.status(400).json({ message: "Selected time slot and confirmedBy are required" });
     }
 
-    // Prepare the data for the database update
     const updateData = {
-      selectedTimeSlot: {
-        ...selectedTimeSlot,
-      },
+      selectedTimeSlot: { ...selectedTimeSlot },
       status: "Confirmé",
     };
     console.log("Data to update in database:", updateData);
 
-    // Update the slot in the database
-    const slot = await Slots.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
+    const slot = await Slots.findByIdAndUpdate(req.params.id, updateData, { new: true }).populate({
+      path: "consultants",
+      populate: { path: "Profile" },
     });
 
     if (!slot) {
@@ -143,6 +141,24 @@ const updateSlotDetails = async (req, res) => {
     }
 
     console.log("Slot updated successfully:", slot);
+
+    // Generate notification
+    const initials = getInitials(slot.consultants.Profile.Name);
+    moment.locale("fr");
+    const day = slot.selectedTimeSlot.day;
+    const date = moment(slot.selectedTimeSlot.date).format("DD MMMM YYYY");
+    const message = `Le Demande D'Echange avec ${initials} a été Confirmé le ${day} ${date}`;
+
+    const notification = new Notification({
+      user: slot.createdBy,
+      message: message,
+    });
+    await notification.save();
+
+    // Emit notification via Socket.io
+    const io = req.app.get("io");
+    io.to(slot.createdBy.toString()).emit("newNotification", notification);
+
     res.json(slot);
   } catch (error) {
     console.error("Error during slot update:", error);
