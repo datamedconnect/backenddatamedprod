@@ -5,6 +5,7 @@ const superController = require("../controllers/superController");
 const slotController = require("../controllers/slotController");
 const consultantController = require("../controllers/consultantController");
 const besionController = require("../controllers/besionController");
+const availabilityController = require("../controllers/availabilityController");
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -42,7 +43,7 @@ router.get(
   "/allconsultants",
   authenticate,
   isSuper,
-  consultantController.getAllConsultantsAdmin
+  consultantController.getAllConsultantsSuper
 );
 router.get(
   "/allBesion",
@@ -105,6 +106,14 @@ router.put(
   authenticate,
   isSuper,
   consultantController.updateConsultantStatus
+);
+
+
+router.put(
+  "/avaibility",
+  authenticate,
+  isSuper,
+  availabilityController.getAllavaibility
 );
 
 module.exports = router;

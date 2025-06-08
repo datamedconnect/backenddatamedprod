@@ -376,6 +376,132 @@ const getAllConsultantsAdmin = async (req, res) => {
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
+const getAllConsultantsSuper = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const phone = req.query.phone || "";
+    const status = req.query.status || "Tous";
+    const experience = req.query.experience || "Tous";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 15;
+    const skip = (page - 1) * limit;
+    console.log("Step 2: Query parameters:", {
+      search,
+      phone,
+      status,
+      experience,
+      page,
+      limit,
+      skip,
+    });
+
+    const matchConditions = [];
+    if (search) {
+      matchConditions.push({
+        $or: [
+          { Email: { $regex: search, $options: "i" } },
+          { "profile.Name": { $regex: search, $options: "i" } },
+        ],
+      });
+    }
+    if (phone) {
+      const escapedPhone = escapeRegex(phone);
+      matchConditions.push({ Phone: { $regex: escapedPhone, $options: "i" } });
+    }
+    if (status !== "Tous") {
+      if (status === "En Attente") {
+        matchConditions.push({
+          $or: [{ status: "En Attente" }, { status: { $exists: false } }],
+        });
+      } else {
+        matchConditions.push({ status: status });
+      }
+    }
+    if (experience !== "Tous") {
+      let expCondition;
+      if (experience.endsWith("+")) {
+        const minExp = parseInt(experience.slice(0, -1), 10);
+        expCondition = { "profile.AnnéeExperience": { $gte: minExp } };
+      } else {
+        const [minExp, maxExp] = experience.split("-").map(Number);
+        expCondition = {
+          "profile.AnnéeExperience": { $gte: minExp, $lte: maxExp },
+        };
+      }
+      matchConditions.push(expCondition);
+    }
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: "profileconsultants",
+          localField: "Profile",
+          foreignField: "_id",
+          as: "profile",
+        },
+      },
+      { $unwind: "$profile" },
+    ];
+    if (matchConditions.length > 0) {
+      pipeline.push({ $match: { $and: matchConditions } });
+    }
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $lookup: {
+              from: "users",
+              localField: "qualifiedBy",
+              foreignField: "_id",
+              as: "qualifiedByUser",
+            },
+          },
+          {
+            $unwind: {
+              path: "$qualifiedByUser",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ],
+      },
+    });
+    console.log(
+      "Step 4: Aggregation pipeline:",
+      JSON.stringify(pipeline, null, 2)
+    );
+
+    const result = await Consultant.aggregate(pipeline);
+
+    const total = result[0].metadata[0] ? result[0].metadata[0].total : 0;
+    const consultants = result[0].data;
+
+    const consultantList = consultants.map((consultant) => ({
+      _id: consultant.profile._id.toString(),
+      id: consultant._id.toString(),
+      Name: consultant.profile.Name,
+      Experience: consultant.profile.AnnéeExperience,
+      Email: consultant.Email,
+      TjmOrSalary: consultant.TjmOrSalary,
+      Phone: consultant.Phone,
+      createdAt: consultant.createdAt,
+      status: consultant.status || "En Attente",
+      qualifiedByName: consultant.qualifiedByUser?.name || "Non spécifié",
+    }));
+
+    res.status(200).json({
+      consultants: consultantList,
+      total,
+    });
+  } catch (error) {
+    console.error("Error in getAllConsultantsAdmin:", error);
+    res.status(500).json({ message: "Erreur du serveur" });
+  }
+};
+
 const createConsultantAdmin = async (req, res) => {
   try {
     // Journaliser le point d'entrée
@@ -860,6 +986,36 @@ const updateConsultantDetails = async (req, res) => {
   }
 };
 
+const getConsultantById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID format (MongoDB ObjectId)
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid consultant ID format" });
+    }
+
+    // Find consultant by ID and populate ProfileConsultant
+    const consultant = await Consultant.findById(id).populate("Profile").lean(); // Use lean() for better performance by returning plain JS object
+
+    if (!consultant) {
+      return res.status(404).json({ message: "Consultant not found" });
+    }
+
+    // Return the consultant data with populated profile
+    res.status(200).json({
+      message: "Consultant retrieved successfully",
+      data: consultant,
+    });
+  } catch (error) {
+    console.error("Error fetching consultant:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   uploadCV,
   getConsultant,
@@ -870,4 +1026,6 @@ module.exports = {
   updateConsultantStatus,
   updateConsultantDetails,
   getexchangerequestAdmin,
+  getConsultantById,
+  getAllConsultantsSuper
 };

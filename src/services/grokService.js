@@ -29,7 +29,7 @@ const extractCVData = async (pdfText) => {
   "Location": "",  // Localisation actuelle du candidat, si mentionnée (ville, région ou pays)
   "AnnéeExperience": 0,  // Nombre total d’années d’expérience professionnelle, calculé à partir des dates des expériences ou estimé si nécessaire
   "Age": 0,  // Âge du candidat, calculé à partir de la date de naissance si disponible, sinon 0
-"Skills": [],  // Liste complète des compétences clés, extraites d’une section dédiée ET systématiquement complétées par les environnements techniques des expériences professionnelles  il doit Etre des Mot Clés si tu Trouves des Phrase Extracter des Mots Clés pas de phrase juste des Mots Clés Make sure that you list all of the skills sometimes they are not in a section but in the experience or technical environment of the experiences, so you have to extract them from there as well.
+"Skills": [],  // Liste complète des compétences clés, extraites d’une section dédiée ET systématiquement complétées par les environnements techniques des expériences professionnelles  il doit Etre des Mot Clés si tu Trouves des Phrase Extracter des Mots Clés pas de phrase juste des Mots Clés Make sure that you list all of the skills sometimes they are not in a section but in the experience or technical environment of the experiences, so you have to extract them from there as well and Most Impotant Check for duplicated Skills and remove them from the list
 // "ExperienceProfessionnelle": [
     {
       "TitrePoste": "",  // Titre exact du poste occupé (ex. "Ingénieur Logiciel Senior")
@@ -37,7 +37,7 @@ const extractCVData = async (pdfText) => {
       "Date": "",  // Période d’emploi au format "Mois Année - Mois Année" ou "Année - Année" ; utiliser "Présent" pour un emploi actuel
       "Localisation": "",  // Ville ou région où le poste a été exercé
       "Context": "",  // Brève description fonctionnelle du rôle ou du projet (ex. "Développement d’une plateforme Industrie 4.0")
-      "Réalisation": [],  // Liste des réalisations concrètes et spécifiques (ex. "Réduction de 20% des temps de traitement")
+      "Réalisation": [],  // Liste des réalisations concrètes et spécifiques (ex. "Réduction de 20% des temps de traitement") make sur the réalisation is a list of achievements  and  the list can not surpase 14 lines maximum it can  be from 2- 14 maximum and if there is more try to integrate them with the 14 lines
       "TechnicalEnv": []  // Environnement technique utilisé : langages, outils, frameworks (ex. "Java, Spring, Docker")
     }
   ],

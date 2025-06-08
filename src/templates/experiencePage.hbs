@@ -1,0 +1,41 @@
+<div class="page" style="width: 794px; height: 1122px; position: relative; background: white; overflow: hidden;">
+  {{> header}}
+  <div data-layer="Frame 1000003963" style="width: 727px; height: 41px; left: 36px; top: 150px; position: absolute; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
+    <div data-layer="Expériences professionnelles" style="left: 16px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Expériences professionnelles</div>
+  </div>
+  {{#each experiences}}
+  <div data-layer="Frame 1000004022" style="width: 708px; left: 47px; top: {{calculateTop @index}}px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: inline-flex;">
+    <div data-layer="Frame 1000004019" style="align-self: stretch; background: rgba(2, 178, 225, 0.20); flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 4px; display: flex;">
+      <div data-layer="Frame 1000004018" style="align-self: stretch; justify-content: space-between; align-items: center; display: inline-flex;">
+        <div data-layer="{{NomEntreprise}}" style="justify-content: center; display: flex; flex-direction: column; color: #1B3A6F; font-size: 14px; font-family: Montserrat; font-weight: 600; line-height: 16.86px; word-wrap: break-word;">{{NomEntreprise}}</div>
+        <div data-layer="Frame 1000004017" style="justify-content: flex-start; align-items: center; gap: 8px; display: flex;">
+          <div data-layer="{{Date}}" style="justify-content: center; display: flex; flex-direction: column; color: #1B3A6F; font-size: 14px; font-family: Montserrat; font-weight: 600; line-height: 16.86px; word-wrap: break-word;">{{Date}}</div>
+        </div>
+      </div>
+      <div data-layer="{{TitrePoste}}" style="align-self: stretch; justify-content: center; display: flex; flex-direction: column; color: black; font-size: 12px; font-family: Montserrat; font-weight: 400; line-height: 14.45px; word-wrap: break-word;">{{TitrePoste}}</div>
+    </div>
+    <div data-layer="Frame 1000004020" style="align-self: stretch; justify-content: flex-start; align-items: start; gap: 12px; display: inline-flex;">
+      <div data-layer="Context :" style="justify-content: center; width: 100px; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 600; line-height: 16.86px; word-wrap: break-word;">Context :</div>
+      <div data-layer="{{Context}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Context}}</div>
+    </div>
+    <div data-layer="Réalisation :" style="align-self: stretch; justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 600; line-height: 16.86px; word-wrap: break-word;">Réalisation :</div>
+    <div data-layer="Frame 1000004027" style="align-self: stretch; padding-left: 15px; padding-right: 15px; flex-direction: column; justify-content: flex-start; align-items: flex-end; gap: 10px; display: flex;">
+      {{#each Réalisation}}
+      <div data-layer="Frame 1000004023" style="align-self: stretch; justify-content: flex-start; align-items: flex-start; gap: 6px; display: inline-flex;">
+        <div data-svg-wrapper data-layer="Frame 1000004024" class="Frame1000004024">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="6.5" cy="6.5" r="1.5" fill="black"/>
+          </svg>
+        </div>
+        <div data-layer="{{this}}" style="width: 659px; justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{this}}</div>
+      </div>
+      {{/each}}
+    </div>
+    <div data-layer="Frame 1000004028" style="align-self: stretch; justify-content: flex-start; align-items: start; gap: 12px; display: inline-flex;">
+      <div data-layer="Environnements techniques" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 600; line-height: 16.86px; word-wrap: break-word;">Environnements Techniques</div>
+      <div data-layer="{{TechnicalEnv}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{TechnicalEnv}}</div>
+    </div>
+  </div>
+  {{/each}}
+  {{> footer}}
+</div>

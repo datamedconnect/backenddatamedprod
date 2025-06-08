@@ -14,6 +14,7 @@ const clientRoutes = require("./routes/clientRoutes");
 const slotRoutes = require("./routes/slotRoutes");
 const superRoutes = require("./routes/superRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const downloadRoutes = require("./routes/downloadRoutes");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
@@ -36,7 +37,9 @@ const io = socketIo(server, {
 });
 
 const PORT = 3000;
-
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static('public')); // Serve static files from 'public' folder
 app.use(cookieParser());
 app.use(
   cors({
@@ -55,6 +58,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/consultants", consultantRoutes);
+app.use("/api/download", downloadRoutes); 
 app.use("/api/admin", adminRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/otp", otpRoutes);
