@@ -131,7 +131,10 @@ const downloadConsultantCV = async (req, res) => {
     `;
 
     // Generate PDF with Puppeteer
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     const page = await browser.newPage();
     await page.setViewport({ width: 794, height: 1122 });
     await page.setContent(fullHtml, { waitUntil: "networkidle0" });
@@ -165,7 +168,6 @@ const downloadConsultantCV = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 const getConsultantById = async (req, res) => {
   try {
