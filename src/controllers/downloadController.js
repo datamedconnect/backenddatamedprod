@@ -16,16 +16,20 @@ const getInitials = (name) => {
 
 const downloadConsultantCV = async (req, res) => {
   try {
+    console.log("Step 1: Received request for consultant CV download");
     const { id } = req.params;
+    console.log("Step 2: Consultant ID:", id);
 
     // Fetch consultant data
     const consultant = await Consultant.findById(id).populate("Profile").lean();
+    console.log("Step 3: Consultant fetched:", consultant ? "Found" : "Not found");
     if (!consultant) {
       return res.status(404).json({ message: "Consultant not found" });
     }
 
     // Compute initials
     const initials = getInitials(consultant.Profile.Name);
+    console.log("Step 4: Initials computed:", initials);
 
     // Load and compile templates
     const firstPageTemplate = fs.readFileSync(
@@ -36,8 +40,10 @@ const downloadConsultantCV = async (req, res) => {
       path.join(__dirname, "../templates/experiencePage.hbs"),
       "utf8"
     );
+    console.log("Step 5: Templates loaded");
     const compileFirstPage = handlebars.compile(firstPageTemplate);
     const compileExperiencePage = handlebars.compile(experiencePageTemplate);
+    console.log("Step 6: Templates compiled");
 
     // Register partials
     handlebars.registerPartial(
@@ -48,11 +54,13 @@ const downloadConsultantCV = async (req, res) => {
       "footer",
       fs.readFileSync(path.join(__dirname, "../templates/footer.hbs"), "utf8")
     );
+    console.log("Step 7: Partials registered");
 
     // Register helper for calculating top position
     handlebars.registerHelper("calculateTop", function (index) {
       return index === 0 ? 224 : 608;
     });
+    console.log("Step 8: Helper registered");
 
     // Prepare data for first page
     const firstPageData = {
@@ -64,7 +72,9 @@ const downloadConsultantCV = async (req, res) => {
       formations: consultant.Profile.Formation,
       skills: consultant.Profile.Skills,
     };
+    console.log("Step 9: First page data prepared:", firstPageData);
     const firstPageHtml = compileFirstPage(firstPageData);
+    console.log("Step 10: First page HTML compiled");
 
     // Group experiences based on Réalisation length
     const experiences = consultant.Profile.ExperienceProfessionnelle || [];
@@ -92,19 +102,22 @@ const downloadConsultantCV = async (req, res) => {
     if (tempGroup.length > 0) {
       experienceGroups.push(tempGroup);
     }
+    console.log("Step 11: Experience groups formed:", experienceGroups.length);
 
     // Render experience pages with limited Réalisation items
     const experiencePagesHtml = experienceGroups
-      .map((group) => {
+      .map((group, idx) => {
         const limitedGroup = group.map((exp) => ({
           ...exp,
           Réalisation: exp.Réalisation.slice(0, 14),
         }));
-        return `
+        const html = `
         <div class="page" style="width: 794px; height: 1122px; position: relative; background: white; overflow: hidden;">
           ${compileExperiencePage({ experiences: limitedGroup })}
         </div>
       `;
+        console.log(`Step 12: Experience page ${idx + 1} HTML compiled`);
+        return html;
       })
       .join("");
 
@@ -129,21 +142,25 @@ const downloadConsultantCV = async (req, res) => {
       </body>
       </html>
     `;
+    console.log("Step 13: Full HTML prepared");
 
     // Generate PDF with Puppeteer
     const browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
+    console.log("Step 14: Puppeteer browser launched");
     const page = await browser.newPage();
     await page.setViewport({ width: 794, height: 1122 });
     await page.setContent(fullHtml, { waitUntil: "networkidle0" });
+    console.log("Step 15: HTML set in Puppeteer page");
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: { top: "0mm", right: "0mm", bottom: "0mm", left: "0mm" },
     });
     await browser.close();
+    console.log("Step 16: PDF generated and browser closed");
 
     // Get current date and time
     const now = new Date();
@@ -155,6 +172,7 @@ const downloadConsultantCV = async (req, res) => {
     const seconds = String(now.getSeconds()).padStart(2, "0");
     const formattedDateTime = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
     const filename = `CV_${initials}_${formattedDateTime}.pdf`;
+    console.log("Step 17: Filename generated:", filename);
 
     // Send PDF response
     res.set({
@@ -163,6 +181,7 @@ const downloadConsultantCV = async (req, res) => {
       "Content-Length": pdfBuffer.length,
     });
     res.send(pdfBuffer);
+    console.log("Step 18: PDF sent to client");
   } catch (error) {
     console.error("Error generating PDF:", error);
     res.status(500).json({ message: "Internal server error" });
