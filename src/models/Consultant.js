@@ -25,6 +25,9 @@ const consultantSchema = new mongoose.Schema(
     available: {
       type: Date,
     },
+    lastUpdated: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

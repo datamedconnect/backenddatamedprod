@@ -1,6 +1,7 @@
 const consultantService = require("../services/consultantService");
 const profileService = require("../services/profileService");
 const Consultant = require("../models/Consultant");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const ProfileConsultant = require("../models/ProfileConsultant");
 const Slots = require("../models/Slots");
@@ -1016,6 +1017,114 @@ const getConsultantById = async (req, res) => {
   }
 };
 
+const getConsultantName = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find consultant by ID and populate Profile
+    const consultant = await Consultant.findById(id).populate("Profile");
+
+    // Check if consultant exists
+    if (!consultant) {
+      return res.status(404).json({ message: "Consultant non trouvé" });
+    }
+
+    // Check if Profile exists
+    if (!consultant.Profile || !consultant.Profile.Name) {
+      return res.status(400).json({ message: "Nom du profil non disponible" });
+    }
+
+    // Return the profile name
+    return res.status(200).json({ name: consultant.Profile.Name });
+  } catch (error) {
+    console.error("Erreur lors de la récupération du nom:", error);
+    return res.status(500).json({ message: "Erreur serveur interne" });
+  }
+};
+
+const updatedAvailability = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { available } = req.body;
+
+    // Validate input
+    if (!available) {
+      return res
+        .status(400)
+        .json({ message: "La date de disponibilité est requise" });
+    }
+
+    // Validate date format
+    const availableDate = new Date(available);
+    if (isNaN(availableDate.getTime())) {
+      return res.status(400).json({ message: "Format de date invalide" });
+    }
+
+    // Update consultant
+    const consultant = await Consultant.findByIdAndUpdate(
+      id,
+      {
+        available: availableDate,
+        lastUpdated: new Date(), // Set to today's date
+      },
+      { new: true, runValidators: true }
+    );
+
+    // Check if consultant exists
+    if (!consultant) {
+      return res.status(404).json({ message: "Consultant non trouvé" });
+    }
+
+    // Return success message
+    return res
+      .status(200)
+      .json({ message: "Disponibilité mise à jour avec succès" });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la disponibilité:", error);
+    return res.status(500).json({ message: "Erreur serveur interne" });
+  }
+};
+
+const verifyAvailabilityToken = async (req, res) => {
+  try {
+    const { id, token } = req.body;
+
+    if (!id || !token) {
+      return res
+        .status(400)
+        .json({ message: "ID du consultant ou jeton manquant" });
+    }
+
+    // Verify the JWT token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "your_jwt_secret"
+    );
+    const { consultantId, createdAt } = decoded;
+
+    if (consultantId !== id) {
+      return res.status(401).json({ message: "Jeton invalide" });
+    }
+
+    // Check if the token was created within the last 24 hours
+    const creationTime = new Date(createdAt);
+    const currentTime = new Date();
+    const hoursDiff = (currentTime - creationTime) / (1000 * 3600);
+    if (hoursDiff > 24) {
+      return res.status(401).json({ message: "Le jeton a expiré" });
+    }
+
+    const consultant = await Consultant.findById(id).select("_id");
+    if (!consultant) {
+      return res.status(404).json({ message: "Consultant non trouvé" });
+    }
+
+    return res.status(200).json({ message: "Jeton valide", consultantId: id });
+  } catch (error) {
+    console.error("Erreur lors de la vérification du jeton:", error);
+    return res.status(500).json({ message: "Erreur serveur interne" });
+  }
+};
 module.exports = {
   uploadCV,
   getConsultant,
@@ -1027,5 +1136,8 @@ module.exports = {
   updateConsultantDetails,
   getexchangerequestAdmin,
   getConsultantById,
-  getAllConsultantsSuper
+  getAllConsultantsSuper,
+  updatedAvailability,
+  getConsultantName,
+  verifyAvailabilityToken,
 };

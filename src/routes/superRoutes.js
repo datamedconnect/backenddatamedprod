@@ -109,11 +109,19 @@ router.put(
 );
 
 
-router.put(
+router.get(
   "/avaibility",
   authenticate,
   isSuper,
   availabilityController.getAllavaibility
 );
+
+router.post(
+  "/sendAvaibility",
+  authenticate,
+  isSuper,
+  availabilityController.sendAvaibility
+);
+
 
 module.exports = router;
