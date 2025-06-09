@@ -7,22 +7,7 @@
     </div>
   </div>
   <div data-layer="Frame 1000004036" class="Frame1000004036" style="width: 727px; left: 37px; top: 204px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 29px; display: inline-flex;">
-    <!-- Languages Section -->
-    {{#if langues}}
-    <div data-layer="Frame 1000003969" class="Frame1000003969" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
-      <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <div data-layer="Langues" class="Langues" style="width: 203px; left: 16px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Langues</div>
-      </div>
-      <div data-layer="Frame 1000003968" class="Frame1000003968" style="align-self: stretch; padding-left: 10px; padding-right: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
-        {{#each langues}}
-        <div data-layer="Frame 1000003964" class="Frame1000003964" style="justify-content: flex-start; align-items: center; gap: 90px; display: inline-flex;">
-          <div data-layer="{{Intitulé}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Intitulé}}</div>
-          <div data-layer="{{Niveau}}" class="{{Niveau}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Niveau}}</div>
-        </div>
-        {{/each}}
-      </div>
-    </div>
-    {{/if}}
+    
     <!-- Certifications Section -->
     {{#if certifications}}
     <div data-layer="Frame 1000003969" class="Frame1000003969" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
@@ -70,6 +55,22 @@
         {{/each}}
       </div>
     </div>
+    <!-- Languages Section -->
+    {{#if langues}}
+    <div data-layer="Frame 1000003969" class="Frame1000003969" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
+      <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
+        <div data-layer="Langues" class="Langues" style="width: 203px; left: 16px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Langues</div>
+      </div>
+      <div data-layer="Frame 1000003968" class="Frame1000003968" style="align-self: stretch; padding-left: 10px; padding-right: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+        {{#each langues}}
+        <div data-layer="Frame 1000003964" class="Frame1000003964" style="justify-content: flex-start; align-items: center; gap: 90px; display: inline-flex;">
+          <div data-layer="{{Intitulé}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Intitulé}}</div>
+          <div data-layer="{{Niveau}}" class="{{Niveau}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Niveau}}</div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+    {{/if}}
   </div>
   {{> footer}}
 </div>
