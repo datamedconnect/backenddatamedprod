@@ -23,7 +23,10 @@ const getSavedConsultants = async (req, res) => {
 
     res.status(200).json(consultantIds);
   } catch (error) {
-    console.error("Erreur lors de la récupération des consultants enregistrés :", error);
+    console.error(
+      "Erreur lors de la récupération des consultants enregistrés :",
+      error
+    );
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
@@ -78,13 +81,17 @@ const unsaveConsultant = async (req, res) => {
       return res.status(404).json({ message: "Consultant non enregistré" });
     }
 
-    res.status(200).json({ message: "Consultant supprimé de la liste avec succès" });
+    res
+      .status(200)
+      .json({ message: "Consultant supprimé de la liste avec succès" });
   } catch (error) {
-    console.error("Erreur lors de la suppression du consultant de la liste :", error);
+    console.error(
+      "Erreur lors de la suppression du consultant de la liste :",
+      error
+    );
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
-
 
 const getSavedProfileConsultant = async (req, res) => {
   try {
@@ -122,7 +129,9 @@ const getSavedProfileConsultant = async (req, res) => {
       }));
 
     if (result.length === 0) {
-      return res.status(404).json({ message: "Aucun consultant enregistré trouvé" });
+      return res
+        .status(404)
+        .json({ message: "Aucun consultant enregistré trouvé" });
     }
 
     res.json(result);

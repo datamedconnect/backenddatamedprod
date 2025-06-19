@@ -12,11 +12,9 @@ const signup = async (req, res) => {
     }
 
     if (role === "client" && !companyName) {
-      return res
-        .status(400)
-        .json({
-          message: "Le nom de l'entreprise est requis pour les clients",
-        });
+      return res.status(400).json({
+        message: "Le nom de l'entreprise est requis pour les clients",
+      });
     }
     if (role === "admin" && !name) {
       return res
@@ -36,48 +34,76 @@ const signup = async (req, res) => {
 
     const html = `
       <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Bienvenue sur Datamed Connect</title>
-      </head>
-      <body style="font-family: Arial, sans-serif; margin: 0; padding: 10px; background-color: #f5f5f5; color: #000000;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bienvenue sur Datamed Connect</title>
+  <style>
+    /* Reset styles for email clients */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; }
+    a { text-decoration: none; }
+    /* Custom styles */
+    .button { display: inline-block; padding: 12px 24px; background-color: #173A6D; color: #FFFFFF !important; border-radius: 5px; font-weight: bold; text-align: center; }
+    .button:hover { background-color: #0F2A4D; }
+    @media screen and (max-width: 600px) {
+      .container { width: 100% !important; }
+      .button { width: 100%; box-sizing: border-box; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F4F6F9; color: #333333;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F6F9;">
+    <tr>
+      <td align="center" style="padding: 20px 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #FFFFFF; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <!-- Header -->
           <tr>
-            <td align="center">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; border: 1px solid #555555; border-radius: 15px; background-color: #ffffff;">
-                <tr>
-                  <td style="text-align: center; padding: 20px 10px;">
-                    <img src="https://media-hosting.imagekit.io/e0ef119c9b7f46a4/logo.png?Expires=1838884151&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=SD~YyZD-QpQkqWVeTCjFR8Hj9hko~Xq0gA9IGxR1WcrIJdFltcgAzXApdh4geqfzeb89XRh~3ZrqbYxPqmDR6XgOlWzVDpPBov8PwZuuxFDX7qFBaUpU0KfMfRX-5Spr4WGL9L3Q0Wb94k8d9jJJIv3fGh0Djm2r6MqyVrG6rEt8ffsLsuAk8Hd3vuqO5jUOEzcLo-GSTXp2y0QbeYJS5hNxUZu-rcjeJrzIyZPSJfE~frdChIdqGhLaSfJa8M0Q0DcuK4WZPbmJ0ZdsySo7-mVeoaeH4aUrNoqSKuPyu9I~2CIUn9-uu0hHCjvvZ650YQ7Dt8p8CBPCR3psIVUwqA__" alt="Logo" style="max-width: 150px; width: 100%; height: auto;" />
-                  </td>
-                </tr>
-                <tr>
-                  <td style="text-align: center; font-size: 18px; font-weight: bold; padding: 10px 15px; color: #000000;">
-                    Bienvenue sur Datamed Connect !
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 15px;">
-                    <p>Merci pour votre inscription. Veuillez cliquer sur le lien ci-dessous pour vérifier votre compte et vous connecter :</p>
-                    <p><a href="${loginUrl}" style="color: #0066cc; text-decoration: underline;">Vérifier et se connecter</a></p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 15px; font-size: 11px; color: #666666; border-top: 1px solid #e0e0e0; text-align: center;">
-                    <a href="#" style="font-size: 12px; color: #0066cc; text-decoration: underline; margin: 0 5px;">Mentions légales</a>
-                    <a href="#" style="font-size: 12px; color: #0066cc; text-decoration: underline; margin: 0 5px;">Politique de cookies</a>
-                    <a href="#" style="font-size: 12px; color: #0066cc; text-decoration: underline; margin: 0 5px;">Politique de confidentialité</a>
-                    <br />
-                    © 2025 - Datamed Connect - Conçu par DatamedConsulting
-                  </td>
-                </tr>
-              </table>
+            <td style="text-align: center; padding: 30px 20px 20px;">
+              <img src="https://media-hosting.imagekit.io/e0ef119c9b7f46a4/logo.png?Expires=1838884151&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=SD~YyZD-QpQkqWVeTCjFR8Hj9hko~Xq0gA9IGxR1WcrIJdFltcgAzXApdh4geqfzeb89XRh~3ZrqbYxPqmDR6XgOlWzVDpPBov8PwZuuxFDX7qFBaUpU0KfMfRX-5Spr4WGL9L3Q0Wb94k8d9jJJIv3fGh0Djm2r6MqyVrG6rEt8ffsLsuAk8Hd3vuqO5jUOEzcLo-GSTXp2y0QbeYJS5hNxUZu-rcjeJrzIyZPSJfE~frdChIdqGhLaSfJa8M0Q0DcuK4WZPbmJ0ZdsySo7-mVeoaeH4aUrNoqSKuPyu9I~2CIUn9-uu0hHCjvvZ650YQ7Dt8p8CBPCR3psIVUwqA__" alt="Datamed Connect Logo" style="max-width: 150px; width: 100%; height: auto;" />
+            </td>
+          </tr>
+          <!-- Title -->
+          <tr>
+            <td style="text-align: center; padding: 10px 20px;">
+              <h1 style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0;">Bienvenue sur Datamed Connect !</h1>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
+              <p style="margin: 0 0 20px;">Merci pour votre inscription à Datamed Connect. Pour finaliser la création de votre compte, veuillez vérifier votre adresse e-mail en cliquant sur le bouton ci-dessous :</p>
+              <p style="text-align: center; margin: 30px 0;">
+                <a href="${loginUrl}"" class="button">Vérifier et se connecter</a>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center; font-size: 12px; color: #666666;">
+              <p style="margin: 0 0 10px;">Suivez-nous sur :</p>
+              <p style="margin: 0 0 20px;">
+                <a href="#" style="margin: 0 5px;"><img src="https://via.placeholder.com/24x24?text=FB" alt="Facebook" style="width: 24px; height: 24px;" /></a>
+                <a href="#" style="margin: 0 5px;"><img src="https://via.placeholder.com/24x24?text=TW" alt="Twitter" style="width: 24px; height: 24px;" /></a>
+                <a href="#" style="margin: 0 5px;"><img src="https://via.placeholder.com/24x24?text=LI" alt="LinkedIn" style="width: 24px; height: 24px;" /></a>
+              </p>
+              <p style="margin: 0 0 10px;">
+                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Mentions légales</a> |
+                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
+                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de confidentialité</a>
+              </p>
+              <p style="margin: 0;">© 2025 - Datamed Connect - Conçu par DatamedConsulting</p>
             </td>
           </tr>
         </table>
-      </body>
-      </html>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
     `;
 
     await sendEmail(email, "Bienvenue sur Datamed Connect", html);
@@ -128,6 +154,7 @@ const getUserDetails = async (req, res) => {
     const user = await User.findById(req.user.id).select(
       "role email companyName name"
     );
+    console.log("User details fetched:", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -137,13 +164,45 @@ const getUserDetails = async (req, res) => {
       email: user.email,
       companyName: user.companyName,
       name: user.name,
+      phonenumber: user.phoneNumber,
     });
   } catch (error) {
     console.error("Error fetching user details:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+const updateUserDetails = async (req, res) => {
+  try {
+    console.log("Update user details request:", req.body);
+    const { email, phonenumber, name, companyName } = req.body;
+    const user = await User.findById(req.user.id);
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (email) user.email = email;
+    if (phonenumber) user.phoneNumber = phonenumber;
+    if (name) user.name = name;
+    if (companyName) user.companyName = companyName;
+
+    await user.save();
+
+    res.json({
+      message: "User details updated successfully",
+      user: {
+        id: user._id,
+        role: user.role,
+        email: user.email,
+        companyName: user.companyName,
+        name: user.name,
+        phonenumber: user.phoneNumber,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating user details:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -168,5 +227,40 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: "Current and new passwords are required" });
+    }
 
-module.exports = { signup, login, getUserDetails, resetPassword };  
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    // Set plain text password; pre-save hook will hash it
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Error updating password:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+module.exports = {
+  signup,
+  login,
+  getUserDetails,
+  resetPassword,
+  updateUserDetails,
+  updatePassword,
+};

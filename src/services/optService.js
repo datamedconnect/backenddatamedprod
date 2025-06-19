@@ -63,7 +63,6 @@ const sendEmail = async (to, otp) => {
   }
 };
 
-
 // Function to send OTP via email
 const sendVerif = async (to, otp) => {
   try {
@@ -74,33 +73,66 @@ const sendVerif = async (to, otp) => {
       html: `<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code de Confirmation</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code de Confirmation</title>
+  <style>
+    /* Reset styles for email clients */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; }
+    a { text-decoration: none; }
+    /* Custom styles */
+    .otp-code { display: inline-block; padding: 10px 20px; background-color: #F4F6F9; border-radius: 5px; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #173A6D; }
+    @media screen and (max-width: 600px) {
+      .container { width: 100% !important; }
+      .otp-code { font-size: 24px; letter-spacing: 5px; }
+    }
+  </style>
 </head>
-<body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #ffffff; color: #000000; text-align: center; border: 1px solid #555555; border-radius: 15px;">
-    <div style="margin-bottom: 20px;">
-        <p style="font-size: 18px; font-weight: bold; color: #000000;">DATAMED CONNECT</p>
-    </div>
-    <div style="font-size: 16px; line-height: 1.5; margin-bottom: 20px; color: #000000;">
-        Merci de déposer votre candidature chez <strong>DATAMED CONSULTING</strong> ! Afin de sécuriser votre compte et de finaliser votre inscription, veuillez saisir le code de confirmation ci-dessous :
-    </div>
-    <div style="font-size: 36px; font-weight: bold; letter-spacing: 10px; margin: 20px 0; color: #000000;">
-        ${otp}
-    </div>
-    <div style="font-size: 16px; line-height: 1.5; margin-bottom: 20px; color: #000000;">
-        Ce code est valide pendant 15 minutes. Si vous n’avez pas initié cette demande, veuillez ignorer cet e-mail.
-    </div>
-    <div style="font-size: 12px; color: #666666; margin-top: 20px; border-top: 1px solid #e0e0e0; padding-top: 10px;">
-        <div>
-            <span style="font-size: 14px; color: #0066cc; text-decoration: underline; margin-right: 10px;">Mentions légales</span>
-            <span style="font-size: 14px; color: #0066cc; text-decoration: underline; margin-right: 10px;">Politique de cookies</span>
-            <span style="font-size: 14px; color: #0066cc; text-decoration: underline;">Politique de confidentialité</span>
-        </div>
-        <div style="font-size: 12px; color: #666666; margin-top: 5px;">
-            © 2025 - Datamed Connect - Site conçu par FARES SAFER
-        </div>
-    </div>
+<body style="margin: 0; padding: 0; background-color: #F4F6F9; color: #333333;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F6F9;">
+    <tr>
+      <td align="center" style="padding: 20px 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #FFFFFF; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="text-align: center; padding: 30px 20px 20px;">
+              <img src="https://media-hosting.imagekit.io/e0ef119c9b7f46a4/logo.png?Expires=1838884151&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=SD~YyZD-QpQkqWVeTCjFR8Hj9hko~Xq0gA9IGxR1WcrIJdFltcgAzXApdh4geqfzeb89XRh~3ZrqbYxPqmDR6XgOlWzVDpPBov8PwZuuxFDX7qFBaUpU0KfMfRX-5Spr4WGL9L3Q0Wb94k8d9jJJIv3fGh0Djm2r6MqyVrG6rEt8ffsLsuAk8Hd3vuqO5jUOEzcLo-GSTXp2y0QbeYJS5hNxUZu-rcjeJrzIyZPSJfE~frdChIdqGhLaSfJa8M0Q0DcuK4WZPbmJ0ZdsySo7-mVeoaeH4aUrNoqSKuPyu9I~2CIUn9-uu0hHCjvvZ650YQ7Dt8p8CBPCR3psIVUwqA__" alt="Datamed Connect Logo" style="max-width: 150px; width: 100%; height: auto;" />
+            </td>
+          </tr>
+          <!-- Title -->
+          <tr>
+            <td style="text-align: center; padding: 10px 20px;">
+              <h1 style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0;">Code de Confirmation</h1>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
+              <p style="margin: 0 0 20px;">Merci de déposer votre candidature chez <strong>Datamed Consulting</strong> ! Afin de sécuriser votre compte et de finaliser votre inscription, veuillez saisir le code de confirmation ci-dessous :</p>
+              <p style="text-align: center; margin: 30px 0;">
+                <span class="otp-code">${otp}</span>
+              </p>
+              <p style="margin: 20px 0 0;">Ce code est valide pendant 15 minutes. Si vous n’avez pas initié cette demande, veuillez ignorer cet e-mail.</p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center; font-size: 12px; color: #666666;">
+              <p style="margin: 0 0 10px;">
+                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Mentions légales</a> |
+                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
+                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de confidentialité</a>
+              </p>
+              <p style="margin: 0;">© 2025 - Datamed Connect - Conçu par Fares Safer</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`,
     });
