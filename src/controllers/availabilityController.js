@@ -93,22 +93,18 @@ const sendAvaibility = async (req, res) => {
               <img src="https://storage.googleapis.com/datamedconnect/logo.png" alt="Datamed Connect Logo" style="max-width: 150px; width: 100%; height: auto;" />
             </td>
           </tr>
-          <!-- Title -->
-          <tr>
-            <td style="text-align: center; padding: 10px 20px;">
-              <h1 style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0;">Mise à jour de Votre Disponibilité</h1>
-            </td>
-          </tr>
           <!-- Content -->
           <tr>
-            <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
-              <p style="margin: 0 0 20px;">Merci pour votre inscription à Datamed Connect. Pour mettre à jour votre disponibilité, veuillez cliquer sur le bouton ci-dessous :</p>
-              <p style="text-align: center; margin: 30px 0;">
-                <a href="${UpdateURL}" class="button">Mettre à jour votre disponibilité</a>
-              </p>
-              <p style="margin: 20px 0 0; text-align: center;"><strong>Note importante :</strong> Ce lien est valable pendant 24 heures.</p>
-            </td>
-          </tr>
+  <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
+    <p style="margin: 0 0 20px;">Bonjour,<br><br>
+    Nous espérons que vous allez bien ! Nous aimerions beaucoup savoir quelles sont vos disponibilités pour de nouvelles opportunités. Des projets intéressants se profilent, et nous voulons vous proposer ceux qui correspondent parfaitement à votre emploi du temps.</p>
+    <p style="margin: 0 0 20px;">Mettre à jour vos disponibilités ne prend qu’un instant, et cela nous permet de vous connecter aux missions qui valorisent votre expertise, au moment qui vous convient le mieux.</p>
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="${UpdateURL}" class="button">Mettre à jour vos disponibilités maintenant</a>
+    </p>
+    <p style="margin: 20px 0 0; text-align: center;"><strong>Note importante :</strong> Ce lien est valable pendant 24 heures.</p>
+  </td>
+</tr>
           <!-- Footer -->
           <tr>
             <td style="padding: 20px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center; font-size: 12px; color: #666666;">
@@ -117,7 +113,7 @@ const sendAvaibility = async (req, res) => {
                 <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
                 <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de confidentialité</a>
               </p>
-              <p style="margin: 0;">© 2025 - Datamed Connect - Conçu par DatamedConsulting</p>
+              <p style="margin: 0;">© 2025 - DATAMED Connect - Conçu par DatamedConsulting</p>
             </td>
           </tr>
         </table>

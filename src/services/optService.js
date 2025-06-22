@@ -75,7 +75,7 @@ const sendEmail = async (to, otp) => {
                 <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
                 <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de confidentialité</a>
               </p>
-              <p style="margin: 0;">© 2025 - Datamed Connect - Conçu par FARES SAFER</p>
+              <p style="margin: 0;">© 2025 - DATAMED Connect - Conçu par DatamedConsulting</p>
             </td>
           </tr>
         </table>
