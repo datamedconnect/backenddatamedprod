@@ -74,7 +74,7 @@ const sendAvaibility = async (req, res) => {
     body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; }
     a { text-decoration: none; }
     /* Custom styles */
-    .button { display: inline-block; padding: 12px 24px; background-color: #173A6D; color: #FFFFFF !important; border-radius: 5px; font-weight: bold; text-align: center; }
+    .button { display: inline-block; padding: 12px 24px; background-color: #173A6D; color:rgb(255, 255, 255) !important; border-radius: 5px; font-weight: bold; text-align: center; }
     .button:hover { background-color: #0F2A4D; }
     @media screen and (max-width: 600px) {
       .container { width: 100% !important; }
@@ -90,7 +90,7 @@ const sendAvaibility = async (req, res) => {
           <!-- Header -->
           <tr>
             <td style="text-align: center; padding: 30px 20px 20px;">
-              <img src="https://media-hosting.imagekit.io/e0ef119c9b7f46a4/logo.png?Expires=1838884151&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=SD~YyZD-QpQkqWVeTCjFR8Hj9hko~Xq0gA9IGxR1WcrIJdFltcgAzXApdh4geqfzeb89XRh~3ZrqbYxPqmDR6XgOlWzVDpPBov8PwZuuxFDX7qFBaUpU0KfMfRX-5Spr4WGL9L3Q0Wb94k8d9jJJIv3fGh0Djm2r6MqyVrG6rEt8ffsLsuAk8Hd3vuqO5jUOEzcLo-GSTXp2y0QbeYJS5hNxUZu-rcjeJrzIyZPSJfE~frdChIdqGhLaSfJa8M0Q0DcuK4WZPbmJ0ZdsySo7-mVeoaeH4aUrNoqSKuPyu9I~2CIUn9-uu0hHCjvvZ650YQ7Dt8p8CBPCR3psIVUwqA__" alt="Datamed Connect Logo" style="max-width: 150px; width: 100%; height: auto;" />
+              <img src="https://storage.googleapis.com/datamedconnect/logo.png" alt="Datamed Connect Logo" style="max-width: 150px; width: 100%; height: auto;" />
             </td>
           </tr>
           <!-- Title -->
@@ -106,7 +106,7 @@ const sendAvaibility = async (req, res) => {
               <p style="text-align: center; margin: 30px 0;">
                 <a href="${UpdateURL}" class="button">Mettre à jour votre disponibilité</a>
               </p>
-              <p style="margin: 20px 0 0;"><strong>Note importante :</strong> Ce lien est valable pendant 24 heures.</p>
+              <p style="margin: 20px 0 0; text-align: center;"><strong>Note importante :</strong> Ce lien est valable pendant 24 heures.</p>
             </td>
           </tr>
           <!-- Footer -->
