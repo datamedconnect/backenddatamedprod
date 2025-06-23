@@ -22,7 +22,10 @@ const downloadConsultantCV = async (req, res) => {
 
     // Fetch consultant data
     const consultant = await Consultant.findById(id).populate("Profile").lean();
-    console.log("Step 3: Consultant fetched:", consultant ? "Found" : "Not found");
+    console.log(
+      "Step 3: Consultant fetched:",
+      consultant ? "Found" : "Not found"
+    );
     if (!consultant) {
       return res.status(404).json({ message: "Consultant not found" });
     }
@@ -112,10 +115,10 @@ const downloadConsultantCV = async (req, res) => {
           Réalisation: exp.Réalisation.slice(0, 14),
         }));
         const html = `
-        <div class="page" style="width: 794px; height: 1122px; position: relative; background: white; overflow: hidden;">
-          ${compileExperiencePage({ experiences: limitedGroup })}
-        </div>
-      `;
+          <div class="page" style="width: 794px; height: 1122px; position: relative; background: white; overflow: hidden;">
+            ${compileExperiencePage({ experiences: limitedGroup })}
+          </div>
+        `;
         console.log(`Step 12: Experience page ${idx + 1} HTML compiled`);
         return html;
       })
@@ -123,25 +126,25 @@ const downloadConsultantCV = async (req, res) => {
 
     // Combine all HTML
     const fullHtml = `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>CV de ${initials}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet" />
-        <style>
-          .page {
-            page-break-after: always;
-          }
-        </style>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #f5f5f5; color: #000000;">
-        ${firstPageHtml}
-        ${experiencePagesHtml}
-      </body>
-      </html>
-    `;
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>CV de ${initials}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet" />
+          <style>
+            .page {
+              page-break-after: always;
+            }
+          </style>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f5f5f5; color: #000000;">
+          ${firstPageHtml}
+          ${experiencePagesHtml}
+        </body>
+        </html>
+      `;
     console.log("Step 13: Full HTML prepared");
 
     // Generate PDF with Puppeteer

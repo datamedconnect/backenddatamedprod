@@ -95,14 +95,15 @@ const sendAvaibility = async (req, res) => {
           </tr>
           <!-- Content -->
           <tr>
+<tr>
   <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
     <p style="margin: 0 0 20px;">Bonjour,<br><br>
-    Nous espérons que vous allez bien ! Nous aimerions beaucoup savoir quelles sont vos disponibilités pour de nouvelles opportunités. Des projets intéressants se profilent, et nous voulons vous proposer ceux qui correspondent parfaitement à votre emploi du temps.</p>
+    Nous espérons que vous allez bien ! Nous aimerions beaucoup connaître vos disponibilités pour des nouvelles opportunités. Des projets intéressants se profilent, et nous souhaitons vous proposer ceux qui correspondent parfaitement à votre emploi du temps.</p>
     <p style="margin: 0 0 20px;">Mettre à jour vos disponibilités ne prend qu’un instant, et cela nous permet de vous connecter aux missions qui valorisent votre expertise, au moment qui vous convient le mieux.</p>
     <p style="text-align: center; margin: 30px 0;">
       <a href="${UpdateURL}" class="button">Mettre à jour vos disponibilités maintenant</a>
     </p>
-    <p style="margin: 20px 0 0; text-align: center;"><strong>Note importante :</strong> Ce lien est valable pendant 24 heures.</p>
+    <p style="margin: 20px 0 0; text-align: center;">Ce lien est valable pendant 24 heures.</p>
   </td>
 </tr>
           <!-- Footer -->
