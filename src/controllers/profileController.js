@@ -38,7 +38,30 @@ const processPDF = async (req, res) => {
     if (!cvDataString || typeof cvDataString !== "string") {
       throw new Error("Invalid CV data returned from Grok service");
     }
-    const cvData = JSON.parse(cvDataString);
+
+    // Function to clean the string: remove comments and optionally handle unquoted keys
+    const cleanJsonString = (str) => {
+      // Remove single-line comments (// to end of line)
+      let cleaned = str.replace(/\/\/.*$/gm, '').trim();
+
+      // Optional: Add quotes to unquoted property names (if Grok returns them)
+      // This regex looks for lines starting with a word followed by a colon
+      cleaned = cleaned.replace(/^(\s*)([a-zA-Z_]\w*)(?=\s*:)/gm, '$1"$2"');
+
+      return cleaned;
+    };
+
+    // Clean the cvDataString
+    const cleanedCvDataString = cleanJsonString(cvDataString);
+
+    // Parse the cleaned string with specific error handling
+    let cvData;
+    try {
+      cvData = JSON.parse(cleanedCvDataString);
+    } catch (parseError) {
+      console.error("Failed to parse cleaned cvDataString:", parseError);
+      throw new Error("Invalid JSON format returned from Grok service");
+    }
 
     const profileData = {
       ...cvData,
