@@ -33,14 +33,14 @@ const logsSchema = new mongoose.Schema(
         "LECTURE_SUPER",
         "LECTURE_ADMIN",
         "CRÉATION_ADMIN",
-        "SUPPRESSION_SLOT", 
+        "SUPPRESSION_SLOT",
         "LECTURE_CONSULTANT_ENREGISTRÉ",
         "CRÉATION_CLIENT",
         "LECTURE_TOUS_CONSULTANTS",
         "LECTURE_CONSULTANT_CRENEAU",
-        "LECTURE_CONSULTANT_BESOIN", // Ajouté
-        "LECTURE_CONSULTANT_CORRESPONDANT", // Ajouté
-        "CRÉATION_SCORE"
+        "LECTURE_CONSULTANT_BESOIN",
+        "LECTURE_CONSULTANT_CORRESPONDANT",
+        "CRÉATION_SCORE",
       ],
     },
     user: {
@@ -62,6 +62,10 @@ const logsSchema = new mongoose.Schema(
       entityId: {
         type: mongoose.Schema.Types.ObjectId,
         required: false,
+      },
+      entityName: {
+        type: String,
+        required: false, // New field for entity name
       },
     },
     metadata: {

@@ -2,7 +2,8 @@ const Consultant = require("../models/Consultant");
 const { encode } = require("html-entities"); // Add this at the top
 const SavedConsultant = require("../models/SavedConsultant");
 const { sendEmail } = require("../services/emailService");
- 
+const FlexSearch = require("flexsearch");
+
 // Fonction utilitaire pour abréger le nom
 const abbreviateName = (fullName) => {
   if (!fullName || typeof fullName !== "string") return null;
@@ -12,36 +13,84 @@ const abbreviateName = (fullName) => {
   const initials = words.map((word) => word[0].toUpperCase());
   return initials.join("") + ".";
 };
-
 const getConsultantClient = async (req, res) => {
   try {
     const userId = req.user.id;
+    const searchQuery = req.query.search || ""; // Get search term from query params
 
-    const savedConsultants = await SavedConsultant.find({ client: userId }).select('consultant');
+    // Fetch saved consultants for the user
+    const savedConsultants = await SavedConsultant.find({ client: userId }).select("consultant");
     const savedConsultantSet = new Set(savedConsultants.map(sc => sc.consultant.toString()));
 
-    // Option 1: Fetch all consultants, or adjust the filter as needed
+    // Fetch all consultants and populate their profiles
     const consultants = await Consultant.find({}).populate("Profile");
-    console.log("Retrieved consultants:", consultants.map(c => ({ _id: c._id, Location: c.Location, Status: c.status })));
+    console.log(
+      "Retrieved consultants:",
+      consultants.map(c => ({ _id: c._id, Location: c.Location, Status: c.status }))
+    );
 
+    // Filter out consultants with missing or invalid profiles
     const filteredConsultants = consultants.filter(consultant => {
       const name = consultant.Profile?.Name;
       return name && name !== "Non spécifié";
     });
-    console.log("Filtered consultants:", filteredConsultants.map(c => ({ _id: c._id, Location: c.Location })));
+    console.log(
+      "Filtered consultants:",
+      filteredConsultants.map(c => ({ _id: c._id, Location: c.Location }))
+    );
 
-    const result = filteredConsultants.map(consultant => ({
+    // Create a FlexSearch Document instance for multi-field indexing
+    const index = new FlexSearch.Document({
+      document: {
+        id: "id", // Field name for the document ID
+        index: ["Name", "Poste", "Location", "Skills"], // Fields to index
+      },
+      tokenize: "forward", // Tokenize words for partial matches
+      context: true, // Enable contextual scoring
+    });
+
+    // Index the filtered consultants
+    filteredConsultants.forEach(consultant => {
+      const profile = consultant.Profile;
+      // This check is redundant due to filtering, but kept for safety
+      if (!profile || !profile.Name || profile.Name === "Non spécifié") {
+        console.warn(`Skipping consultant ${consultant._id} due to missing or invalid Profile`);
+        return;
+      }
+      const document = {
+        id: consultant._id.toString(),
+        Name: typeof profile.Name === "string" ? profile.Name : "",
+        Poste: Array.isArray(profile.Poste) ? profile.Poste.join(" ") : "",
+        Location: Array.isArray(consultant.Location) ? consultant.Location.join(" ") : "",
+        Skills: Array.isArray(profile.Skills) ? profile.Skills.join(" ") : "",
+      };
+      index.add(document);
+    });
+
+    // Perform search if a query is provided, otherwise return all filtered consultants
+    let searchResults = filteredConsultants;
+    if (searchQuery) {
+      const fieldResults = index.search(searchQuery, { limit: 10, suggest: true });
+      const resultIds = new Set();
+      fieldResults.forEach(fieldResult => {
+        fieldResult.result.forEach(id => resultIds.add(id));
+      });
+      searchResults = filteredConsultants.filter(c => resultIds.has(c._id.toString()));
+    }
+
+    // Map to final result format
+    const result = searchResults.map(consultant => ({
       _id: consultant._id,
-      profileid: consultant.Profile._id,
+      profileid: consultant.Profile?._id,
       Name: consultant.Profile ? abbreviateName(consultant.Profile.Name) : null,
       Age: consultant.Age,
-      Poste: consultant.Profile ? consultant.Profile.Poste : [],
+      Poste: consultant.Profile?.Poste || [],
       Available: consultant.available,
       Location: Array.isArray(consultant.Location) ? consultant.Location : [],
-      AnnéeExperience: consultant.Profile ? consultant.Profile.AnnéeExperience : null,
-      Skills: consultant.Profile ? consultant.Profile.Skills : [],
+      AnnéeExperience: consultant.Profile?.AnnéeExperience || null,
+      Skills: consultant.Profile?.Skills || [],
       TjmOrSalary: consultant.TjmOrSalary,
-      isSaved: savedConsultantSet.has(consultant._id.toString())
+      isSaved: savedConsultantSet.has(consultant._id.toString()),
     }));
 
     res.json(result);
@@ -67,7 +116,10 @@ const sendsupport = async (req, res) => {
   if (!selectedStatus || selectedStatus === "All") {
     errors.push("Please select a subject type");
   }
-  if (selectedStatus === "Autre" && (!otherSubject || otherSubject.trim() === "")) {
+  if (
+    selectedStatus === "Autre" &&
+    (!otherSubject || otherSubject.trim() === "")
+  ) {
     errors.push("Please specify the subject");
   }
   if (!message || message.trim() === "") {
@@ -125,19 +177,27 @@ const sendsupport = async (req, res) => {
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 5px; font-weight: bold; border-bottom: 1px solid #E5E7EB;">Nom :</td>
-                  <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(name)}</td>
+                  <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(
+                    name
+                  )}</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px; font-weight: bold; border-bottom: 1px solid #E5E7EB;">Email :</td>
-                  <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(email)}</td>
+                  <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(
+                    email
+                  )}</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px; font-weight: bold; border-bottom: 1px solid #E5E7EB;">Type de sujet :</td>
-                  <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(subjectType)}</td>
+                  <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(
+                    subjectType
+                  )}</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px; font-weight: bold; border-bottom: 1px solid #E5E7EB; vertical-align: top;">Message :</td>
-                  <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(message)}</td>
+                  <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(
+                    message
+                  )}</td>
                 </tr>
               </table>
             </td>
@@ -170,7 +230,6 @@ const sendsupport = async (req, res) => {
     res.status(500).json({ message: "Failed to send support request" });
   }
 };
-
 
 module.exports = {
   getConsultantClient,
