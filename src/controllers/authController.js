@@ -3,6 +3,11 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const { sendEmail } = require("../services/emailService");
 
+// In-memory store for verification codes (use Redis or similar in production)
+const verificationCodes = new Map(); // { email: { code: string, expires: number, attempts: number } }
+const RESEND_LIMIT = 3; // Max resend attempts
+const CODE_EXPIRY = 5 * 60 * 1000; // 5 minutes expiry
+
 const signup = async (req, res) => {
   const { email, password, role, name, companyName } = req.body;
   try {
@@ -17,9 +22,7 @@ const signup = async (req, res) => {
       });
     }
     if (role === "admin" && !name) {
-      return res
-        .status(400)
-        .json({ message: "Le nom est requis pour les administrateurs" });
+      return res.status(400).json({ message: "Le nom est requis pour les administrateurs" });
     }
 
     const user = new User({ email, password, role, name, companyName });
@@ -34,62 +37,229 @@ const signup = async (req, res) => {
 
     const html = `
       <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Bienvenue sur Datamed Connect</title>
+        <style>
+          body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
+          .button { display: inline-block; padding: 12px 24px; background-color: #173A6D; color: #FFFFFF !important; border-radius: 5px; font-weight: bold; }
+          .container { max-width: 600px; background-color: #FFFFFF; border-radius: 10px; }
+        </style>
+      </head>
+      <body style="background-color: #F4F6F9;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="center" style="padding: 20px;">
+              <table class="container">
+                <tr>
+                  <td style="text-align: center; padding: 30px;">
+                    <img src="https://media-hosting.imagekit.io/e0ef119c9b7f46a4/logo.png" alt="Logo" style="max-width: 150px;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px; font-size: 16px;">
+                    <h1 style="color: #173A6D;">Bienvenue sur Datamed Connect !</h1>
+                    <p>Veuillez vérifier votre adresse e-mail en cliquant ci-dessous :</p>
+                    <p style="text-align: center;">
+                      <a href="${loginUrl}" class="button">Vérifier et se connecter</a>
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px; background-color: #F9FAFB; font-size: 12px; text-align: center;">
+                    <p>© 2025 - Datamed Connect</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    await sendEmail(email, "Bienvenue sur Datamed Connect", html);
+    res.status(201).json({
+      message: "Utilisateur créé avec succès. Veuillez vérifier votre email.",
+    });
+  } catch (error) {
+    console.error("Erreur d'inscription:", error);
+    res.status(500).json({ message: "Erreur du serveur" });
+  }
+};
+
+const login = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user || user.status !== "Activé") {
+      return res.status(401).json({ message: "Adresse e-mail non trouvée ou compte non activé" });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Mot de passe incorrect" });
+    }
+
+    // Generate a 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + CODE_EXPIRY;
+
+    // Store the code in memory
+    verificationCodes.set(email, { code, expires, attempts: 0 });
+
+    // Send email with verification code
+    const html = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Vérification de connexion</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #F4F6F9; }
+          .container { max-width: 600px; background-color: #FFFFFF; border-radius: 10px; }
+          .code { font-size: 24px; font-weight: bold; color: #173A6D; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="center" style="padding: 20px;">
+              <table class="container">
+                <tr>
+                  <td style="text-align: center; padding: 30px;">
+                    <h1 style="color: #173A6D;">Vérifiez votre connexion</h1>
+                    <p>Votre code de vérification est :</p>
+                    <p class="code">${code}</p>
+                    <p>Ce code expire dans 5 minutes.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px; text-align: center; font-size: 12px;">
+                    <p>© 2025 - Datamed Connect</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    await sendEmail(email, "Votre code de vérification", html);
+    res.json({ message: "Code de vérification envoyé", email });
+  } catch (error) {
+    console.error("Erreur de connexion:", error);
+    res.status(500).json({ message: "Erreur du serveur" });
+  }
+};
+
+const verifyCode = async (req, res) => {
+  const { email, code } = req.body;
+  try {
+    const storedData = verificationCodes.get(email);
+    if (!storedData) {
+      return res.status(400).json({ message: "Aucun code trouvé pour cet email" });
+    }
+    if (storedData.expires < Date.now()) {
+      verificationCodes.delete(email);
+      return res.status(400).json({ message: "Code expiré" });
+    }
+    if (storedData.code !== code) {
+      return res.status(400).json({ message: "Code incorrect" });
+    }
+
+    // Code is valid, issue JWT
+    const user = await User.findOne({ email });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "8h",
+    });
+
+    // Clean up
+    verificationCodes.delete(email);
+
+    res.cookie("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 8 * 60 * 60 * 1000,
+    });
+    res.json({
+      token,
+      user: { id: user._id, role: user.role, email: user.email },
+    });
+  } catch (error) {
+    console.error("Erreur de vérification:", error);
+    res.status(500).json({ message: "Erreur du serveur" });
+  }
+};
+
+const resendCode = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const storedData = verificationCodes.get(email);
+    if (!storedData) {
+      return res.status(400).json({ message: "Aucune session de connexion active" });
+    }
+    if (storedData.attempts >= RESEND_LIMIT) {
+      verificationCodes.delete(email);
+      return res.status(429).json({ message: "Limite de renvoi atteinte" });
+    }
+
+    // Generate new code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + CODE_EXPIRY;
+    verificationCodes.set(email, {
+      code,
+      expires,
+      attempts: storedData.attempts + 1,
+    });
+
+    // Send email
+    const html = `
+      <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bienvenue sur Datamed Connect</title>
+  <title>Nouveau code de vérification</title>
   <style>
     /* Reset styles for email clients */
     body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-    body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; }
+    body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #F4F6F9; color: #333333; }
     a { text-decoration: none; }
-    /* Custom styles */
-    .button { display: inline-block; padding: 12px 24px; background-color: #173A6D; color: #FFFFFF !important; border-radius: 5px; font-weight: bold; text-align: center; }
-    .button:hover { background-color: #0F2A4D; }
     @media screen and (max-width: 600px) {
       .container { width: 100% !important; }
-      .button { width: 100%; box-sizing: border-box; }
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #F4F6F9; color: #333333;">
+<body>
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F6F9;">
     <tr>
-      <td align="center" style="padding: 20px 10px;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #FFFFFF; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <!-- Header -->
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #FFFFFF; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" class="container">
           <tr>
             <td style="text-align: center; padding: 30px 20px 20px;">
-              <img src="https://media-hosting.imagekit.io/e0ef119c9b7f46a4/logo.png?Expires=1838884151&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=SD~YyZD-QpQkqWVeTCjFR8Hj9hko~Xq0gA9IGxR1WcrIJdFltcgAzXApdh4geqfzeb89XRh~3ZrqbYxPqmDR6XgOlWzVDpPBov8PwZuuxFDX7qFBaUpU0KfMfRX-5Spr4WGL9L3Q0Wb94k8d9jJJIv3fGh0Djm2r6MqyVrG6rEt8ffsLsuAk8Hd3vuqO5jUOEzcLo-GSTXp2y0QbeYJS5hNxUZu-rcjeJrzIyZPSJfE~frdChIdqGhLaSfJa8M0Q0DcuK4WZPbmJ0ZdsySo7-mVeoaeH4aUrNoqSKuPyu9I~2CIUn9-uu0hHCjvvZ650YQ7Dt8p8CBPCR3psIVUwqA__" alt="Datamed Connect Logo" style="max-width: 150px; width: 100%; height: auto;" />
+              <img src="https://storage.googleapis.com/datamedconnect/logo.png" alt="Logo" style="max-width: 150px; width: 100%; height: auto;" />
             </td>
           </tr>
-          <!-- Title -->
           <tr>
-            <td style="text-align: center; padding: 10px 20px;">
-              <h1 style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0;">Bienvenue sur Datamed Connect !</h1>
+            <td style="text-align: center; font-size: 18px; font-weight: bold; padding: 10px 15px; color: #333333;">
+              Votre code de vérification
             </td>
           </tr>
-          <!-- Content -->
           <tr>
-            <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333;">
-              <p style="margin: 0 0 20px;">Merci pour votre inscription à Datamed Connect. Pour finaliser la création de votre compte, veuillez vérifier votre adresse e-mail en cliquant sur le bouton ci-dessous :</p>
-              <p style="text-align: center; margin: 30px 0;">
-                <a href="${loginUrl}"" class="button">Vérifier et se connecter</a>
-              </p>
+            <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333; text-align: center;">
+              <p style="margin: 0 0 10px;">Votre nouveau code est :</p>
+              <p style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0 0 10px;">${code}</p>
+              <p style="margin: 0;">Ce code expire dans 5 minutes.</p>
             </td>
           </tr>
-          <!-- Footer -->
           <tr>
             <td style="padding: 20px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center; font-size: 12px; color: #666666;">
-              <p style="margin: 0 0 10px;">Suivez-nous sur :</p>
-              <p style="margin: 0 0 20px;">
-                <a href="#" style="margin: 0 5px;"><img src="https://via.placeholder.com/24x24?text=FB" alt="Facebook" style="width: 24px; height: 24px;" /></a>
-                <a href="#" style="margin: 0 5px;"><img src="https://via.placeholder.com/24x24?text=TW" alt="Twitter" style="width: 24px; height: 24px;" /></a>
-                <a href="#" style="margin: 0 5px;"><img src="https://via.placeholder.com/24x24?text=LI" alt="LinkedIn" style="width: 24px; height: 24px;" /></a>
-              </p>
               <p style="margin: 0 0 10px;">
                 <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Mentions légales</a> |
                 <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
@@ -106,45 +276,10 @@ const signup = async (req, res) => {
 </html>
     `;
 
-    await sendEmail(email, "Bienvenue sur Datamed Connect", html);
-    res.status(201).json({
-      message: "Utilisateur créé avec succès. Veuillez vérifier votre email.",
-    });
+    await sendEmail(email, "Nouveau code de vérification", html);
+    res.json({ message: "Nouveau code envoyé" });
   } catch (error) {
-    console.error("Erreur d'inscription:", error);
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ message: error.message });
-    }
-    res.status(500).json({ message: "Erreur du serveur" });
-  }
-};
-
-const login = async (req, res) => {
-  const { email, password } = req.body;
-  console.log("Login attempt:", { email, password });
-  try {
-    const user = await User.findOne({ email });
-    if (!user || user.status !== "Activé") {
-      return res.status(401).json({ message: "Adresse e-mail non trouvée" });
-    }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Mot de passe incorrect" });
-    }
-
-    req.user = { id: user._id };
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "8h",
-    });
-    res.cookie("auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 8 * 60 * 60 * 1000,
-    });
-    res.json({ token });
-  } catch (error) {
-    console.error("Erreur de connexion:", error);
+    console.error("Erreur de renvoi:", error);
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
@@ -154,7 +289,6 @@ const getUserDetails = async (req, res) => {
     const user = await User.findById(req.user.id).select(
       "role email companyName name"
     );
-    console.log("User details fetched:", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -171,9 +305,9 @@ const getUserDetails = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 const updateUserDetails = async (req, res) => {
   try {
-    console.log("Update user details request:", req.body);
     const { email, phonenumber, name, companyName } = req.body;
     const user = await User.findById(req.user.id);
 
@@ -203,14 +337,12 @@ const updateUserDetails = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
-    console.log("Reset password request:", { email, newPassword });
     if (!email || !newPassword) {
-      return res
-        .status(400)
-        .json({ message: "Email and new password are required" });
+      return res.status(400).json({ message: "Email and new password are required" });
     }
 
     const user = await User.findOne({ email });
@@ -218,8 +350,8 @@ const resetPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.password = newPassword; // Set the plain password here
-    await user.save(); // Pre-save hook will hash it once
+    user.password = newPassword;
+    await user.save();
 
     res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
@@ -227,13 +359,12 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {
-      return res
-        .status(400)
-        .json({ message: "Current and new passwords are required" });
+      return res.status(400).json({ message: "Current and new passwords are required" });
     }
 
     const user = await User.findById(req.user.id);
@@ -246,7 +377,6 @@ const updatePassword = async (req, res) => {
       return res.status(401).json({ message: "Current password is incorrect" });
     }
 
-    // Set plain text password; pre-save hook will hash it
     user.password = newPassword;
     await user.save();
 
@@ -256,9 +386,12 @@ const updatePassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 module.exports = {
   signup,
   login,
+  verifyCode,
+  resendCode,
   getUserDetails,
   resetPassword,
   updateUserDetails,
