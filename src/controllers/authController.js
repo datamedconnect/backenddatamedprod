@@ -22,7 +22,9 @@ const signup = async (req, res) => {
       });
     }
     if (role === "admin" && !name) {
-      return res.status(400).json({ message: "Le nom est requis pour les administrateurs" });
+      return res
+        .status(400)
+        .json({ message: "Le nom est requis pour les administrateurs" });
     }
 
     const user = new User({ email, password, role, name, companyName });
@@ -94,7 +96,9 @@ const login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user || user.status !== "Activé") {
-      return res.status(401).json({ message: "Adresse e-mail non trouvée ou compte non activé" });
+      return res
+        .status(401)
+        .json({ message: "Adresse e-mail non trouvée ou compte non activé" });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -181,7 +185,9 @@ const verifyCode = async (req, res) => {
   try {
     const storedData = verificationCodes.get(email);
     if (!storedData) {
-      return res.status(400).json({ message: "Aucun code trouvé pour cet email" });
+      return res
+        .status(400)
+        .json({ message: "Aucun code trouvé pour cet email" });
     }
     if (storedData.expires < Date.now()) {
       verificationCodes.delete(email);
@@ -220,7 +226,9 @@ const resendCode = async (req, res) => {
   try {
     const storedData = verificationCodes.get(email);
     if (!storedData) {
-      return res.status(400).json({ message: "Aucune session de connexion active" });
+      return res
+        .status(400)
+        .json({ message: "Aucune session de connexion active" });
     }
     if (storedData.attempts >= RESEND_LIMIT) {
       verificationCodes.delete(email);
@@ -362,7 +370,9 @@ const resetPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
     if (!email || !newPassword) {
-      return res.status(400).json({ message: "Email and new password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and new password are required" });
     }
 
     const user = await User.findOne({ email });
@@ -384,7 +394,9 @@ const updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: "Current and new passwords are required" });
+      return res
+        .status(400)
+        .json({ message: "Current and new passwords are required" });
     }
 
     const user = await User.findById(req.user.id);

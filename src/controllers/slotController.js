@@ -3,7 +3,6 @@ const moment = require("moment"); // Add this import to fix the error
 const Notification = require("../models/Notification");
 const { sendEmail } = require("../services/emailService");
 
-
 // Fonction utilitaire pour calculer les initiales à partir d'un nom
 const getInitials = (name) => {
   if (!name) return "";
@@ -71,7 +70,10 @@ const getAllSlotsAdmin = async (req, res) => {
 
     res.json(transformedSlots);
   } catch (error) {
-    console.error("Erreur lors de la récupération de tous les créneaux :", error);
+    console.error(
+      "Erreur lors de la récupération de tous les créneaux :",
+      error
+    );
     res.status(500).json({ message: error.message });
   }
 };
@@ -95,7 +97,9 @@ const getSlotsByClient = async (req, res) => {
     res.status(200).json(slots);
   } catch (error) {
     console.error("Erreur lors de la récupération des créneaux :", error);
-    res.status(500).json({ message: "Erreur du serveur", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Erreur du serveur", error: error.message });
   }
 };
 
@@ -170,13 +174,18 @@ const getSlotAdmin = async (req, res) => {
 
 const updateSlotDetails = async (req, res) => {
   try {
-    console.log("Step 1: Starting updateSlotDetails for slot ID:", req.params.id);
+    console.log(
+      "Step 1: Starting updateSlotDetails for slot ID:",
+      req.params.id
+    );
     const { selectedTimeSlot } = req.body;
     console.log("Step 2: Selected time slot received:", selectedTimeSlot);
 
     if (!selectedTimeSlot || !selectedTimeSlot.confirmedBy) {
       console.log("Step 3: Validation failed - Missing required fields");
-      return res.status(400).json({ message: "Selected time slot and confirmedBy are required" });
+      return res
+        .status(400)
+        .json({ message: "Selected time slot and confirmedBy are required" });
     }
     console.log("Step 4: Validation passed - Required fields present");
 
@@ -187,7 +196,9 @@ const updateSlotDetails = async (req, res) => {
     console.log("Step 5: Prepared update data:", updateData);
 
     console.log("Step 6: Updating slot in database...");
-    const slot = await Slots.findByIdAndUpdate(req.params.id, updateData, { new: true }).populate({
+    const slot = await Slots.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    }).populate({
       path: "consultants",
       populate: { path: "Profile" },
     });
@@ -217,13 +228,20 @@ const updateSlotDetails = async (req, res) => {
     console.log("Step 13: Emitting notification via Socket.io...");
     const io = req.app.get("io");
     io.to(slot.createdBy.toString()).emit("newNotification", notification);
-    console.log("Step 14: Notification emitted to user:", slot.createdBy.toString());
+    console.log(
+      "Step 14: Notification emitted to user:",
+      slot.createdBy.toString()
+    );
 
-    console.log("Step 15: Preparing to send confirmation email to consultant...");
+    console.log(
+      "Step 15: Preparing to send confirmation email to consultant..."
+    );
     try {
       const consultantEmail = slot.consultants.Email;
       const consultantName = slot.consultants.Profile.Name;
-      const formattedDate = moment(slot.selectedTimeSlot.date).format("DD MMMM YYYY");
+      const formattedDate = moment(slot.selectedTimeSlot.date).format(
+        "DD MMMM YYYY"
+      );
       const htmlContent = `
       <!DOCTYPE html>
       <html lang="fr">
@@ -316,9 +334,6 @@ const updateSlotDetails = async (req, res) => {
   }
 };
 
-
-
-
 const deleteSlotAdmin = async (req, res) => {
   try {
     const slot = await Slots.findByIdAndDelete(req.params.id);
@@ -345,22 +360,24 @@ const updateSlotStatus = async (req, res) => {
 
     res.json(slot);
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du statut du créneau :", error);
+    console.error(
+      "Erreur lors de la mise à jour du statut du créneau :",
+      error
+    );
     res.status(400).json({ message: error.message });
   }
 };
 
 const getAllConsultantsSlotsById = async (req, res) => {
   try {
-    const userId = req.params.id;
-
-    // Vérifier que l'ID de l'utilisateur requis correspond au client authentifié
+    const userId = req.params.id;    // Vérifier que l'ID de l'utilisateur requis correspond au client authentifié
     if (userId !== req.user.id) {
       return res
         .status(403)
-        .json({ message: "Interdit : Vous ne pouvez accéder qu'à vos propres données" });
+        .json({
+          message: "Interdit : Vous ne pouvez accéder qu'à vos propres données",
+        });
     }
-
     // Récupérer tous les créneaux créés par cet utilisateur
     const slots = await Slots.find({ createdBy: userId })
       .populate({
@@ -371,9 +388,10 @@ const getAllConsultantsSlotsById = async (req, res) => {
         },
       })
       .lean();
-
     if (!slots || slots.length === 0) {
-      return res.status(404).json({ message: "Aucun créneau trouvé pour cet utilisateur" });
+      return res
+        .status(404)
+        .json({ message: "Aucun créneau trouvé pour cet utilisateur" });
     }
 
     // Transformer les créneaux pour inclure les champs nécessaires
