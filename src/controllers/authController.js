@@ -87,10 +87,11 @@ const signup = async (req, res) => {
       message: "Utilisateur créé avec succès. Veuillez vérifier votre email.",
     });
   } catch (error) {
-    console.error("Erreur d'inscription:", error);
+    console.error("Erreur d'inscription:", error.message);
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
+
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -115,67 +116,66 @@ const login = async (req, res) => {
     // Send email with verification code
     const html = `
       <!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nouveau code de vérification</title>
-  <style>
-    /* Reset styles for email clients */
-    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-    body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #F4F6F9; color: #333333; }
-    a { text-decoration: none; }
-    @media screen and (max-width: 600px) {
-      .container { width: 100% !important; }
-    }
-  </style>
-</head>
-<body>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F6F9;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #FFFFFF; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" class="container">
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Nouveau code de vérification</title>
+        <style>
+          body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+          table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+          img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+          body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #F4F6F9; color: #333333; }
+          a { text-decoration: none; }
+          @media screen and (max-width: 600px) {
+            .container { width: 100% !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F6F9;">
           <tr>
-            <td style="text-align: center; padding: 30px 20px 20px;">
-              <img src="https://storage.googleapis.com/datamedconnect/logo.png" alt="Logo" style="max-width: 150px; width: 100%; height: auto;" />
-            </td>
-          </tr>
-          <tr>
-            <td style="text-align: center; font-size: 18px; font-weight: bold; padding: 10px 15px; color: #333333;">
-              Votre code de vérification
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333; text-align: center;">
-              <p style="margin: 0 0 10px;">Votre nouveau code est :</p>
-              <p style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0 0 10px;">${code}</p>
-              <p style="margin: 0;">Ce code expire dans 5 minutes.</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 20px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center; font-size: 12px; color: #666666;">
-              <p style="margin: 0 0 10px;">
-                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Mentions légales</a> |
-                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
-                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de confidentialité</a>
-              </p>
-              <p style="margin: 0;">© 2025 - Datamed Connect - Conçu par DatamedConsulting</p>
+            <td align="center">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #FFFFFF; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" class="container">
+                <tr>
+                  <td style="text-align: center; padding: 30px 20px 20px;">
+                    <img src="https://storage.googleapis.com/datamedconnect/logo.png" alt="Logo" style="max-width: 150px; width: 100%; height: auto;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td style="text-align: center; font-size: 18px; font-weight: bold; padding: 10px 15px; color: #333333;">
+                    Votre code de vérification
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333; text-align: center;">
+                    <p style="margin: 0 0 10px;">Votre nouveau code est :</p>
+                    <p style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0 0 10px;">${code}</p>
+                    <p style="margin: 0;">Ce code expire dans 5 minutes.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center; font-size: 12px; color: #666666;">
+                    <p style="margin: 0 0 10px;">
+                      <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Mentions légales</a> |
+                      <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
+                      <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de confidentialité</a>
+                    </p>
+                    <p style="margin: 0;">© 2025 - Datamed Connect - Conçu par DatamedConsulting</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
+      </body>
+      </html>
     `;
 
     await sendEmail(email, "Votre code de vérification", html);
     res.json({ message: "Code de vérification envoyé", email });
   } catch (error) {
-    console.error("Erreur de connexion:", error);
+    console.error("Erreur de connexion:", error.message);
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
@@ -206,17 +206,12 @@ const verifyCode = async (req, res) => {
     // Clean up
     verificationCodes.delete(email);
 
-    res.cookie("auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 8 * 60 * 60 * 1000,
-    });
     res.json({
       token,
       user: { id: user._id, role: user.role, email: user.email },
     });
   } catch (error) {
-    console.error("Erreur de vérification:", error);
+    console.error("Erreur de vérification:", error.message);
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
@@ -247,67 +242,66 @@ const resendCode = async (req, res) => {
     // Send email
     const html = `
       <!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nouveau code de vérification</title>
-  <style>
-    /* Reset styles for email clients */
-    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-    body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #F4F6F9; color: #333333; }
-    a { text-decoration: none; }
-    @media screen and (max-width: 600px) {
-      .container { width: 100% !important; }
-    }
-  </style>
-</head>
-<body>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F6F9;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #FFFFFF; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" class="container">
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Nouveau code de vérification</title>
+        <style>
+          body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+          table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+          img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+          body { margin: 0; padding: 0; width: 100% !important; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #F4F6F9; color: #333333; }
+          a { text-decoration: none; }
+          @media screen and (max-width: 600px) {
+            .container { width: 100% !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F6F9;">
           <tr>
-            <td style="text-align: center; padding: 30px 20px 20px;">
-              <img src="https://storage.googleapis.com/datamedconnect/logo.png" alt="Logo" style="max-width: 150px; width: 100%; height: auto;" />
-            </td>
-          </tr>
-          <tr>
-            <td style="text-align: center; font-size: 18px; font-weight: bold; padding: 10px 15px; color: #333333;">
-              Votre code de vérification
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333; text-align: center;">
-              <p style="margin: 0 0 10px;">Votre nouveau code est :</p>
-              <p style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0 0 10px;">${code}</p>
-              <p style="margin: 0;">Ce code expire dans 5 minutes.</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 20px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center; font-size: 12px; color: #666666;">
-              <p style="margin: 0 0 10px;">
-                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Mentions légales</a> |
-                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
-                <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de confidentialité</a>
-              </p>
-              <p style="margin: 0;">© 2025 - Datamed Connect - Conçu par DatamedConsulting</p>
+            <td align="center">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #FFFFFF; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" class="container">
+                <tr>
+                  <td style="text-align: center; padding: 30px 20px 20px;">
+                    <img src="https://storage.googleapis.com/datamedconnect/logo.png" alt="Logo" style="max-width: 150px; width: 100%; height: auto;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td style="text-align: center; font-size: 18px; font-weight: bold; padding: 10px 15px; color: #333333;">
+                    Votre code de vérification
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px 30px; font-size: 16px; line-height: 1.6; color: #333333; text-align: center;">
+                    <p style="margin: 0 0 10px;">Votre nouveau code est :</p>
+                    <p style="font-size: 24px; font-weight: bold; color: #173A6D; margin: 0 0 10px;">${code}</p>
+                    <p style="margin: 0;">Ce code expire dans 5 minutes.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px 30px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center; font-size: 12px; color: #666666;">
+                    <p style="margin: 0 0 10px;">
+                      <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Mentions légales</a> |
+                      <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de cookies</a> |
+                      <a href="#" style="color: #173A6D; text-decoration: underline; margin: 0 8px;">Politique de confidentialité</a>
+                    </p>
+                    <p style="margin: 0;">© 2025 - Datamed Connect - Conçu par DatamedConsulting</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
+      </body>
+      </html>
     `;
 
     await sendEmail(email, "Nouveau code de vérification", html);
     res.json({ message: "Nouveau code envoyé" });
   } catch (error) {
-    console.error("Erreur de renvoi:", error);
+    console.error("Erreur de renvoi:", error.message);
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
@@ -329,7 +323,7 @@ const getUserDetails = async (req, res) => {
       phonenumber: user.phoneNumber,
     });
   } catch (error) {
-    console.error("Error fetching user details:", error);
+    console.error("Error fetching user details:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -361,7 +355,7 @@ const updateUserDetails = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error updating user details:", error);
+    console.error("Error updating user details:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -414,7 +408,7 @@ const updatePassword = async (req, res) => {
 
     res.json({ message: "Password updated successfully" });
   } catch (error) {
-    console.error("Error updating password:", error);
+    console.error("Error updating password:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };

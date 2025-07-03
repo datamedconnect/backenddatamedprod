@@ -74,7 +74,6 @@ app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-// Socket.io connection handling
 io.on("connection", (socket) => {
   socket.on("join", (userId) => {
     socket.join(userId);
@@ -82,7 +81,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// Make io accessible in controllers
 app.set("io", io);
 
 server.listen(PORT, () => {
