@@ -9,68 +9,68 @@
   <div data-layer="Frame 1000004036" class="Frame1000004036" style="width: 727px; left: 37px; top: 204px; position: absolute; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 29px; display: inline-flex;">
     
     <!-- Certifications Section -->
-    {{#if certifications}}
-    <div data-layer="Frame 1000003969" class="Frame1000003969" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
-      <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <div data-layer="Certifications" class="Certifications" style="width: 203px; left: 16px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Certifications</div>
-      </div>
-      <div data-layer="Frame 1000003968" class="Frame1000003968" style="align-self: stretch; padding-left: 10px; padding-right: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
-        {{#each certifications}}
-        <div data-layer="Frame 1000003964" class="Frame1000003964" style="justify-content: flex-start; align-items: center; gap: 90px; display: inline-flex;">
-          <div data-layer="{{Certif}}" class="{{Certif}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Certif}}</div>
-          {{#if AnnéeCertif}}
-          <div data-layer="{{AnnéeCertif}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{AnnéeCertif}}</div>
-          {{/if}}
-        </div>
-        {{/each}}
-      </div>
+{{#if certifications}}
+<div data-layer="Frame 1000003969" class="Frame1000003969" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
+  <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
+    <div data-layer="Certifications" class="Certifications" style="width: 203px; left: 16px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Certifications</div>
+  </div>
+  <div data-layer="Frame 1000003968" class="Frame1000003968" style="align-self: stretch; padding-left: 10px; padding-right: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+    {{#each certifications}}
+    <div data-layer="Frame 1000003964" class="Frame1000003964" style="width: 100%; justify-content: space-between; align-items: center; display: flex;">
+      <div data-layer="{{Certif}}" class="{{Certif}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Certif}}</div>
+      {{#if AnnéeCertif}}
+      <div data-layer="{{AnnéeCertif}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{AnnéeCertif}}</div>
+      {{/if}}
     </div>
-    {{/if}}
-    <!-- Formations Section -->
-    {{#if formations}}
-    <div data-layer="Frame 1000003970" class="Frame1000003970" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
-      <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <div data-layer="Diplomes & Formations" class="DiplomesFormations" style="width: 203px; left: 13px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Diplômes & Formations</div>
-      </div>
-      <div data-layer="Frame 1000003968" class="Frame1000003968" style="align-self: stretch; padding-left: 10px; padding-right: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
-        {{#each formations}}
-        <div data-layer="Frame 1000003964" class="Frame1000003964" style="justify-content: flex-start; align-items: center; gap: 90px; display: inline-flex;">
-          <div data-layer="{{Diplome}}" class="{{Diplome}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Diplome}} - {{Ecole}}</div>
-          <div data-layer="{{Année}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Année}}</div>
-        </div>
-        {{/each}}
-      </div>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
+<!-- Formations Section -->
+{{#if formations}}
+<div data-layer="Frame 1000003970" class="Frame1000003970" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
+  <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
+    <div data-layer="Diplomes & Formations" class="DiplomesFormations" style="width: 203px; left: 13px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Diplômes & Formations</div>
+  </div>
+  <div data-layer="Frame 1000003968" class="Frame1000003968" style="align-self: stretch; padding-left: 10px; padding-right: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+    {{#each formations}}
+    <div data-layer="Frame 1000003964" class="Frame1000003964" style="width: 100%; justify-content: space-between; align-items: center; display: flex;">
+      <div data-layer="{{Diplome}}" class="{{Diplome}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Diplome}} - {{Ecole}}</div>
+      <div data-layer="{{Année}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Année}}</div>
     </div>
-    {{/if}}
-    <!-- Skills Section -->
-    <div data-layer="Frame 1000003971" class="Frame1000003971" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
-      <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <div data-layer="Compétences Technique et Fonctionnelle" class="CompTencesTechniqueEtFonctionnelle" style="left: 12px; top: 13px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Compétences Technique et Fonctionnelle</div>
-      </div>
-      <div data-layer="Frame 1000003979" class="Frame1000003979" style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex; flex-wrap: wrap; align-content: center;">
-        {{#each skills}}
-        <div data-layer="Frame 1000003972" class="Frame1000003972" style="padding-left: 10px; padding-right: 10px; padding-top: 3px; padding-bottom: 3px; background: rgba(2, 178, 225, 0.20); overflow: hidden; border-radius: 8px; justify-content: center; align-items: center; gap: 10px; display: flex;">
-          <div data-layer="{{this}}" class="{{this}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{this}}</div>
-        </div>
-        {{/each}}
-      </div>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
+<!-- Skills Section -->
+<div data-layer="Frame 1000003971" class="Frame1000003971" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
+  <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
+    <div data-layer="Compétences Technique et Fonctionnelle" class="CompTencesTechniqueEtFonctionnelle" style="left: 12px; top: 13px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Compétences Technique et Fonctionnelle</div>
+  </div>
+  <div data-layer="Frame 1000003979" class="Frame1000003979" style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex; flex-wrap: wrap; align-content: center;">
+    {{#each skills}}
+    <div data-layer="Frame 1000003972" class="Frame1000003972" style="padding-left: 10px; padding-right: 10px; padding-top: 3px; padding-bottom: 3px; background: rgba(2, 178, 225, 0.20); overflow: hidden; border-radius: 8px; justify-content: center; align-items: center; gap: 10px; display: flex;">
+      <div data-layer="{{this}}" class="{{this}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{this}}</div>
     </div>
-    <!-- Languages Section -->
-    {{#if langues}}
-    <div data-layer="Frame 1000003969" class="Frame1000003969" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
-      <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
-        <div data-layer="Langues" class="Langues" style="width: 203px; left: 16px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Langues</div>
-      </div>
-      <div data-layer="Frame 1000003968" class="Frame1000003968" style="align-self: stretch; padding-left: 10px; padding-right: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
-        {{#each langues}}
-        <div data-layer="Frame 1000003964" class="Frame1000003964" style="justify-content: flex-start; align-items: center; gap: 90px; display: inline-flex;">
-          <div data-layer="{{Intitulé}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Intitulé}}</div>
-          <div data-layer="{{Niveau}}" class="{{Niveau}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Niveau}}</div>
-        </div>
-        {{/each}}
-      </div>
+    {{/each}}
+  </div>
+</div>
+<!-- Languages Section -->
+{{#if langues}}
+<div data-layer="Frame 1000003969" class="Frame1000003969" style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 12px; display: flex;">
+  <div data-layer="Frame 1000003963" class="Frame1000003963" style="align-self: stretch; height: 41px; position: relative; background: #1B3A6F; overflow: hidden; border-top-left-radius: 5px; border-top-right-radius: 5px;">
+    <div data-layer="Langues" class="Langues" style="width: 203px; left: 16px; top: 11px; position: absolute; justify-content: center; display: flex; flex-direction: column; color: white; font-size: 16px; font-family: Montserrat; font-weight: 500; line-height: 19.26px; word-wrap: break-word;">Langues</div>
+  </div>
+  <div data-layer="Frame 1000003968" class="Frame1000003968" style="align-self: stretch; padding-left: 10px; padding-right: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 10px; display: flex;">
+    {{#each langues}}
+    <div data-layer="Frame 1000003964" class="Frame1000003964" style="width: 100%; justify-content: space-between; align-items: center; display: flex;">
+      <div data-layer="{{Intitulé}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Intitulé}}</div>
+      <div data-layer="{{Niveau}}" class="{{Niveau}}" style="justify-content: center; display: flex; flex-direction: column; color: black; font-size: 14px; font-family: Montserrat; font-weight: 400; line-height: 16.86px; word-wrap: break-word;">{{Niveau}}</div>
     </div>
-    {{/if}}
+    {{/each}}
+  </div>
+</div>
+{{/if}}
   </div>
   {{> footer}}
 </div>

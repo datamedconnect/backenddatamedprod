@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
@@ -15,7 +14,7 @@ const userSchema = new mongoose.Schema({
   companyName: { type: String },
   status: {
     type: String,
-    enum: ["Activé", "Désactivé"], // Corrected to "Désactivé"
+    enum: ["Activé", "Désactivé"],
     default: "Activé",
   },
   integrations: [
@@ -29,6 +28,8 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
+  // Add this new field
+  last_verified_at: { type: Date, default: null },
 });
 
 userSchema.pre("save", async function (next) {

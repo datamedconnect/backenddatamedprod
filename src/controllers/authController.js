@@ -106,6 +106,20 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Mot de passe incorrect" });
     }
 
+    // Check if user has verified within the last 24 hours
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    if (user.last_verified_at && user.last_verified_at > oneDayAgo) {
+      // Issue JWT token directly
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "8h",
+      });
+      return res.json({
+        token,
+        user: { id: user._id, role: user.role, email: user.email },
+      });
+    }
+
     // Generate a 6-digit verification code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = Date.now() + CODE_EXPIRY;
@@ -113,7 +127,7 @@ const login = async (req, res) => {
     // Store the code in memory
     verificationCodes.set(email, { code, expires, attempts: 0 });
 
-    // Send email with verification code
+    // Send email with verification code (unchanged)
     const html = `
       <!DOCTYPE html>
       <html lang="fr">
@@ -179,7 +193,6 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
-
 const verifyCode = async (req, res) => {
   const { email, code } = req.body;
   try {
@@ -197,8 +210,11 @@ const verifyCode = async (req, res) => {
       return res.status(400).json({ message: "Code incorrect" });
     }
 
-    // Code is valid, issue JWT
+    // Code is valid, update last_verified_at and issue JWT
     const user = await User.findOne({ email });
+    user.last_verified_at = new Date();
+    await user.save();
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "8h",
     });

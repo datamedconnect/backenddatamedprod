@@ -584,7 +584,7 @@ const createConsultantAdmin = async (req, res) => {
 
     // Journaliser les champs extraits
     console.log("Étape 7 : Extraction des champs du corps de la requête");
-    const { email, phone, missionType, tjmOrSalary, location, age } =
+    const { email, phone, missionType, tjmOrSalary, location, age, sourcedBy } =
       req.body || {};
     console.log("Étape 8 : Champs extraits :", {
       email,
@@ -593,6 +593,7 @@ const createConsultantAdmin = async (req, res) => {
       tjmOrSalary,
       location,
       age,
+      sourcedBy,
     });
 
     // Valider les champs requis
@@ -631,6 +632,7 @@ const createConsultantAdmin = async (req, res) => {
       TjmOrSalary: tjmOrSalary || "Non spécifié",
       Location: location || "Non spécifié",
       Profile: profile._id,
+      sourcedBy: sourcedBy || null, // Include sourcedBy
     };
     const consultant = await consultantService.createConsultant(consultantData);
     console.log("Étape 13 : Consultant créé :", consultant._id);

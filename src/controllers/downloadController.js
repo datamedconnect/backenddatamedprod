@@ -86,7 +86,7 @@ const downloadConsultantCV = async (req, res) => {
 
     experiences.forEach((exp) => {
       const realisationLines = exp.Réalisation.length;
-      if (realisationLines > 4) {
+      if (realisationLines > 5) {
         if (tempGroup.length > 0) {
           experienceGroups.push(tempGroup);
           tempGroup = [];
