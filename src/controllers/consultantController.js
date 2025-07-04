@@ -139,11 +139,11 @@ const getConsultantAdmin = async (req, res) => {
   }
 };
 
+const escapeRegex = (string) =>
+  string.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+
 // const getAllConsultantsAdmin = async (req, res) => {
 //   try {
-//     const userId = req.user.id; // ID de l'utilisateur authentifié
-//     console.log(userId)
-//     // Extraire les paramètres de requête
 //     const search = req.query.search || "";
 //     const phone = req.query.phone || "";
 //     const status = req.query.status || "Tous";
@@ -151,10 +151,17 @@ const getConsultantAdmin = async (req, res) => {
 //     const page = parseInt(req.query.page) || 1;
 //     const limit = parseInt(req.query.limit) || 15;
 //     const skip = (page - 1) * limit;
+//     console.log("Step 2: Query parameters:", {
+//       search,
+//       phone,
+//       status,
+//       experience,
+//       page,
+//       limit,
+//       skip,
+//     });
 
-//     // Construire les conditions de correspondance pour le filtrage
 //     const matchConditions = [];
-
 //     if (search) {
 //       matchConditions.push({
 //         $or: [
@@ -163,11 +170,10 @@ const getConsultantAdmin = async (req, res) => {
 //         ],
 //       });
 //     }
-
 //     if (phone) {
-//       matchConditions.push({ Phone: { $regex: phone, $options: "i" } });
+//       const escapedPhone = escapeRegex(phone);
+//       matchConditions.push({ Phone: { $regex: escapedPhone, $options: "i" } });
 //     }
-
 //     if (status !== "Tous") {
 //       if (status === "En Attente") {
 //         matchConditions.push({
@@ -177,7 +183,6 @@ const getConsultantAdmin = async (req, res) => {
 //         matchConditions.push({ status: status });
 //       }
 //     }
-
 //     if (experience !== "Tous") {
 //       let expCondition;
 //       if (experience.endsWith("+")) {
@@ -192,43 +197,58 @@ const getConsultantAdmin = async (req, res) => {
 //       matchConditions.push(expCondition);
 //     }
 
-//     // Définir le pipeline d'agrégation
 //     const pipeline = [
 //       {
 //         $lookup: {
-//           from: "profileconsultants", // Assurez-vous que cela correspond au nom de votre collection ProfileConsultant
+//           from: "profileconsultants",
 //           localField: "Profile",
 //           foreignField: "_id",
 //           as: "profile",
 //         },
 //       },
-//       { $unwind: "$profile" }, // Dérouler le tableau profile pour accéder aux champs
-//       // Ajouter un filtre pour exclure les profils avec Name: "Non spécifié"
+//       { $unwind: "$profile" },
 //       { $match: { "profile.Name": { $ne: "Non spécifié" } } },
 //     ];
-
-//     // Appliquer des conditions de correspondance supplémentaires si elles existent
 //     if (matchConditions.length > 0) {
 //       pipeline.push({ $match: { $and: matchConditions } });
 //     }
-
 //     pipeline.push({
 //       $facet: {
 //         metadata: [{ $count: "total" }],
-//         data: [{ $sort: { createdAt: -1 } }, { $skip: skip }, { $limit: limit }],
+//         data: [
+//           { $sort: { createdAt: -1 } },
+//           { $skip: skip },
+//           { $limit: limit },
+//           {
+//             $lookup: {
+//               from: "users",
+//               localField: "qualifiedBy",
+//               foreignField: "_id",
+//               as: "qualifiedByUser",
+//             },
+//           },
+//           {
+//             $unwind: {
+//               path: "$qualifiedByUser",
+//               preserveNullAndEmptyArrays: true,
+//             },
+//           },
+//         ],
 //       },
 //     });
+//     console.log(
+//       "Step 4: Aggregation pipeline:",
+//       JSON.stringify(pipeline, null, 2)
+//     );
 
-//     // Exécuter l'agrégation
 //     const result = await Consultant.aggregate(pipeline);
 
 //     const total = result[0].metadata[0] ? result[0].metadata[0].total : 0;
 //     const consultants = result[0].data;
 
-//     // Transformer les données pour le frontend
 //     const consultantList = consultants.map((consultant) => ({
-//       _id: consultant.profile._id.toString(), // ID du profil
-//       id: consultant._id.toString(), // ID du consultant
+//       _id: consultant.profile._id.toString(),
+//       id: consultant._id.toString(),
 //       Name: consultant.profile.Name,
 //       Experience: consultant.profile.AnnéeExperience,
 //       Email: consultant.Email,
@@ -236,6 +256,7 @@ const getConsultantAdmin = async (req, res) => {
 //       Phone: consultant.Phone,
 //       createdAt: consultant.createdAt,
 //       status: consultant.status || "En Attente",
+//       qualifiedByName: consultant.qualifiedByUser?.name || "Non spécifié",
 //     }));
 
 //     res.status(200).json({
@@ -243,13 +264,11 @@ const getConsultantAdmin = async (req, res) => {
 //       total,
 //     });
 //   } catch (error) {
-//     console.error("Erreur lors de la récupération des consultants :", error);
+//     console.error("Error in getAllConsultantsAdmin:", error);
 //     res.status(500).json({ message: "Erreur du serveur" });
 //   }
 // };
 
-const escapeRegex = (string) =>
-  string.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
 
 const getAllConsultantsAdmin = async (req, res) => {
   try {
@@ -342,6 +361,20 @@ const getAllConsultantsAdmin = async (req, res) => {
               preserveNullAndEmptyArrays: true,
             },
           },
+          {
+            $lookup: {
+              from: "users",
+              localField: "sourcedBy",
+              foreignField: "_id",
+              as: "sourcedByUser",
+            },
+          },
+          {
+            $unwind: {
+              path: "$sourcedByUser",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
         ],
       },
     });
@@ -366,6 +399,7 @@ const getAllConsultantsAdmin = async (req, res) => {
       createdAt: consultant.createdAt,
       status: consultant.status || "En Attente",
       qualifiedByName: consultant.qualifiedByUser?.name || "Non spécifié",
+      sourcedBy: consultant.sourcedByUser?.name || "Site Web",
     }));
 
     res.status(200).json({
@@ -377,6 +411,7 @@ const getAllConsultantsAdmin = async (req, res) => {
     res.status(500).json({ message: "Erreur du serveur" });
   }
 };
+
 const getAllConsultantsSuper = async (req, res) => {
   try {
     const search = req.query.search || "";
@@ -678,7 +713,7 @@ const createConsultantAdmin = async (req, res) => {
 
 const uploadCV = async (req, res) => {
   try {
-    const { email, phone, missionType, tjmOrSalary, location } = req.body;
+    const { email, phone, missionType, tjmOrSalary, location, sourcedBy  } = req.body;
 
     // Valider les champs requis
     if (!email || !phone) {
@@ -704,6 +739,7 @@ const uploadCV = async (req, res) => {
     const consultantData = {
       Email: email,
       Phone: phone,
+      sourcedBy: sourcedBy,
       MissionType: missionType || "Non spécifié",
       Age: 0,
       TjmOrSalary: tjmOrSalary || "Non spécifié",

@@ -7,9 +7,13 @@ const consultantSchema = new mongoose.Schema(
     MissionType: String,
     TjmOrSalary: String,
     Age: { type: Number, required: false },
-    Location: [String], // Array of strings for multiple locations this is ne
+    Location: [String], // Array of strings for multiple locations
     Profile: { type: mongoose.Schema.Types.ObjectId, ref: "ProfileConsultant" },
     qualifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    sourcedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
@@ -70,6 +74,13 @@ consultantSchema.pre("findOneAndUpdate", function (next) {
     console.log(
       `Pre-update: Setting qualifiedBy to ${
         update.qualifiedBy
+      } for consultant ID ${this.getQuery()._id}`
+    );
+  }
+  if (update.sourcedBy) {
+    console.log(
+      `Pre-update: Setting sourcedBy to ${
+        update.sourcedBy
       } for consultant ID ${this.getQuery()._id}`
     );
   }
