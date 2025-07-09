@@ -37,7 +37,7 @@ const extractCVData = async (pdfText) => {
       "Date": "",  // Période d’emploi au format "Mois Année - Mois Année" ou "Année - Année" ; utiliser "Présent" pour un emploi actuel
       "Localisation": "",  // Ville ou région où le poste a été exercé
       "Context": "",  // Brève description fonctionnelle du rôle ou du projet (ex. "Développement d’une plateforme Industrie 4.0")
-      "Réalisation": [],  // Liste des réalisations concrètes et spécifiques (ex. "Réduction de 20% des temps de traitement") make sur the réalisation is a list of achievements  and  the list can not surpase 14 lines maximum it can  be from 2- 14 maximum and if there is more try to integrate them with the 14 lines
+      "Réalisation": [],  // Liste des réalisations concrètes et spécifiques (ex. "Réduction de 20% des temps de traitement") make sur the réalisation is a list of achievements and don't miss anything in the text given of that experience
       "TechnicalEnv": []  // Environnement technique utilisé : langages, outils, frameworks (ex. "Java, Spring, Docker")
     }
   ],
