@@ -21,7 +21,15 @@ const createbesion = async (req, res) => {
     } = req.body;
 
     // Basic validation for required fields
-    if (!createdBy || !nomClient || !dateLimite || !poste || !experience || !mission || !prixAchat) {
+    if (
+      !createdBy ||
+      !nomClient ||
+      !dateLimite ||
+      !poste ||
+      !experience ||
+      !mission ||
+      !prixAchat
+    ) {
       console.log("Champs requis manquants");
       return res.status(400).json({ message: "Champs requis manquants" });
     }
@@ -913,6 +921,196 @@ const fetchBesionMatching = async (req, res) => {
   }
 };
 
+const compareConsultant = async (req, res) => {
+  try {
+    console.log("Step 1: Received request with body:", req.body);
+
+    const { besoinId, consultantId } = req.body;
+
+    // Validate input IDs
+    console.log("Step 2: Validating IDs", { besoinId, consultantId });
+    if (
+      !mongoose.Types.ObjectId.isValid(besoinId) ||
+      !mongoose.Types.ObjectId.isValid(consultantId)
+    ) {
+      console.log("Step 2.1: Invalid IDs detected");
+      return res.status(400).json({ error: "Invalid besoin or consultant ID" });
+    }
+
+    // Fetch besoin
+    console.log("Step 3: Fetching besoin with ID:", besoinId);
+    const besoin = await Besion.findById(besoinId);
+    if (!besoin) {
+      console.log("Step 3.1: Besoin not found");
+      return res.status(404).json({ error: "Besoin not found" });
+    }
+    console.log("Step 3.2: Besoin fetched successfully:", besoin);
+
+    // Fetch consultant with populated profile
+    console.log("Step 4: Fetching consultant with ID:", consultantId);
+    const consultant = await Consultant.findById(consultantId).populate(
+      "Profile"
+    );
+    if (!consultant || !consultant.Profile) {
+      console.log("Step 4.1: Consultant or profile not found");
+      return res.status(404).json({ error: "Consultant or profile not found" });
+    }
+    console.log("Step 4.2: Consultant fetched successfully:", consultant);
+
+    // Prepare data for Grok API
+    console.log("Step 5: Preparing data for Grok API");
+    const besoinData = {
+      poste: besoin.poste || "N/A",
+      experience: besoin.experience || 0,
+      mission: besoin.mission || "N/A",
+      prixAchat: besoin.prixAchat || 0,
+    };
+    const consultantData = {
+      Poste: consultant.Profile.Poste || [],
+      AnnéeExperience: consultant.Profile.AnnéeExperience || 0,
+      Skills: consultant.Profile.Skills || [],
+      Location: consultant.Location || [],
+      ExperienceProfessionnelle:
+        consultant.Profile.ExperienceProfessionnelle || [],
+      Langue: consultant.Profile.Langue || [],
+      Formation: consultant.Profile.Formation || [],
+      Certifications: consultant.Profile.Certifications || [],
+      TjmOrSalary: consultant.TjmOrSalary || "",
+    };
+    console.log("Step 5.1: Prepared besoinData:", besoinData);
+    console.log("Step 5.2: Prepared consultantData:", consultantData);
+
+    // Grok API prompt
+    console.log("Step 6: Constructing Grok API prompt");
+    const prompt = `Compare the following besoin and consultant profiles and return a compatibility score (0-100) and a commercial argumentative paragraph to propose this consultant profile. in frenshh rediger une paraghraphe courte argumentaire commercial pour proposer le profile commancant par bonjour terminant par cordialement ne mentoinner pas l'année
+
+Besoin:
+${JSON.stringify(besoinData, null, 2)}
+
+Consultant:
+${JSON.stringify(consultantData, null, 2)}
+
+Return the response in the following JSON format:
+{
+  "score": number,
+  "paragraphe": string
+}`;
+    console.log("Step 6.1: Grok API prompt constructed:", prompt);
+
+    // Call Grok API
+    console.log(
+      "Step 7: Calling Grok API with key:",
+      process.env.GROK_API_KEY ? "Key present" : "Key missing"
+    );
+    let grokResponse;
+    try {
+      grokResponse = await axios.post(
+        "https://api.x.ai/v1/chat/completions",
+        {
+          model: "grok-3-mini",
+          messages: [{ role: "user", content: prompt }],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.GROK_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(
+        "Step 7.1: Grok API response received:",
+        JSON.stringify(grokResponse.data, null, 2)
+      );
+    } catch (apiError) {
+      console.error("Step 7.2: Grok API call failed:", {
+        message: apiError.message,
+        response: apiError.response
+          ? JSON.stringify(apiError.response.data, null, 2)
+          : "No response data",
+      });
+      return res
+        .status(500)
+        .json({ error: "Grok API request failed", details: apiError.message });
+    }
+
+    // Parse Grok API response
+    console.log("Step 8: Parsing Grok API response");
+    let responseData;
+    try {
+      const messageContent = grokResponse.data.choices[0].message.content;
+      console.log("Step 8.1: Raw message content:", messageContent);
+      // Remove markdown code block markers if present
+      const cleanedContent = messageContent
+        .replace(/^```json\n/, "")
+        .replace(/\n```$/, "");
+      console.log("Step 8.2: Cleaned message content:", cleanedContent);
+      responseData = JSON.parse(cleanedContent);
+      console.log("Step 8.3: Parsed responseData:", responseData);
+    } catch (parseError) {
+      console.error(
+        "Step 8.4: Failed to parse Grok API response:",
+        parseError.message
+      );
+      return res
+        .status(500)
+        .json({
+          error: "Failed to parse Grok API response",
+          details: parseError.message,
+        });
+    }
+
+    const { score, paragraphe } = responseData;
+    console.log("Step 8.5: Extracted score:", score, "paragraphe:", paragraphe);
+
+    // Validate response
+    console.log("Step 9: Validating Grok API response");
+    if (
+      typeof score !== "number" ||
+      score < 0 ||
+      score > 100 ||
+      typeof paragraphe !== "string"
+    ) {
+      console.log("Step 9.1: Invalid Grok API response detected", {
+        score,
+        paragraphe,
+      });
+      return res.status(500).json({ error: "Invalid response from Grok API" });
+    }
+    console.log("Step 9.2: Grok API response validated successfully");
+
+    // Store score in besoins.consultantsScores
+    console.log("Step 10: Updating Besion with consultant score");
+    const updatedBesion = await Besion.findByIdAndUpdate(
+      besoinId,
+      {
+        $push: {
+          consultantsScores: {
+            consultantId,
+            score,
+          },
+        },
+      },
+      { new: true }
+    );
+    console.log("Step 10.1: Besion updated successfully:", updatedBesion);
+
+    // Return response
+    console.log("Step 11: Sending response to client");
+    return res.status(200).json({
+      score,
+      paragraphe,
+    });
+  } catch (error) {
+    console.error("Error in compareConsultant:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    return res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
+  }
+};
+
 module.exports = {
   createbesion,
   getAllBesion,
@@ -928,4 +1126,5 @@ module.exports = {
   triggerMatching,
   getBesionWithMatchingPost,
   fetchBesionMatching,
+  compareConsultant,
 };

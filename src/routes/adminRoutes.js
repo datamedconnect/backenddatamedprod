@@ -4,7 +4,7 @@ const { authenticate, isAdmin, isClient } = require("../middleware/auth");
 const consultantController = require("../controllers/consultantController");
 const slotController = require("../controllers/slotController");
 const besionController = require("../controllers/besionController");
-const clientController  = require("../controllers/clientController");
+const clientController = require("../controllers/clientController");
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -34,7 +34,7 @@ router.get(
   consultantController.getexchangerequestAdmin
 );
 router.put(
-  "/consultants/:id/status", 
+  "/consultants/:id/status",
   authenticate,
   // isAdmin,
   consultantController.updateConsultantStatus
@@ -56,7 +56,7 @@ router.put(
   authenticate,
   // isAdmin,
   slotController.updateSlotStatus
-)
+);
 router.post(
   "/addBesion",
   authenticate,
@@ -105,15 +105,12 @@ router.post(
   besionController.extractPdfData
 );
 
-
 router.post(
   "/sendsupport",
   authenticate,
   // isAdmin,
   clientController.sendsupport
 );
-
-
 
 // **New Endpoints**
 router.post(
@@ -134,8 +131,9 @@ router.get(
   besionController.fetchBesionMatching
 );
 
-
-
+router.post("/compareConsultant",
+  authenticate,
+  besionController.compareConsultant
+);
 
 module.exports = router;
-  
