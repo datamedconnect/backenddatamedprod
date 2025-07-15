@@ -71,7 +71,9 @@ app.use("/api/client", clientRoutes);
 app.use("/api/slots", slotRoutes);
 app.use("/api/super", superRoutes);
 app.use("/api/notifications", notificationRoutes);
-
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
+});
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
