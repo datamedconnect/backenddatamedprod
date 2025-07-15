@@ -72,7 +72,7 @@ const getAllSlotsAdmin = async (req, res) => {
   } catch (error) {
     console.error(
       "Erreur lors de la récupération de tous les créneaux :",
-      error
+      error,
     );
     res.status(500).json({ message: error.message });
   }
@@ -176,7 +176,7 @@ const updateSlotDetails = async (req, res) => {
   try {
     console.log(
       "Step 1: Starting updateSlotDetails for slot ID:",
-      req.params.id
+      req.params.id,
     );
     const { selectedTimeSlot } = req.body;
     console.log("Step 2: Selected time slot received:", selectedTimeSlot);
@@ -230,17 +230,17 @@ const updateSlotDetails = async (req, res) => {
     io.to(slot.createdBy.toString()).emit("newNotification", notification);
     console.log(
       "Step 14: Notification emitted to user:",
-      slot.createdBy.toString()
+      slot.createdBy.toString(),
     );
 
     console.log(
-      "Step 15: Preparing to send confirmation email to consultant..."
+      "Step 15: Preparing to send confirmation email to consultant...",
     );
     try {
       const consultantEmail = slot.consultants.Email;
       const consultantName = slot.consultants.Profile.Name;
       const formattedDate = moment(slot.selectedTimeSlot.date).format(
-        "DD MMMM YYYY"
+        "DD MMMM YYYY",
       );
       const htmlContent = `
       <!DOCTYPE html>
@@ -362,7 +362,7 @@ const updateSlotStatus = async (req, res) => {
   } catch (error) {
     console.error(
       "Erreur lors de la mise à jour du statut du créneau :",
-      error
+      error,
     );
     res.status(400).json({ message: error.message });
   }
@@ -370,13 +370,11 @@ const updateSlotStatus = async (req, res) => {
 
 const getAllConsultantsSlotsById = async (req, res) => {
   try {
-    const userId = req.params.id;    // Vérifier que l'ID de l'utilisateur requis correspond au client authentifié
+    const userId = req.params.id; // Vérifier que l'ID de l'utilisateur requis correspond au client authentifié
     if (userId !== req.user.id) {
-      return res
-        .status(403)
-        .json({
-          message: "Interdit : Vous ne pouvez accéder qu'à vos propres données",
-        });
+      return res.status(403).json({
+        message: "Interdit : Vous ne pouvez accéder qu'à vos propres données",
+      });
     }
     // Récupérer tous les créneaux créés par cet utilisateur
     const slots = await Slots.find({ createdBy: userId })

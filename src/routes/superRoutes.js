@@ -22,7 +22,7 @@ router.post(
   "/createuseradmin",
   authenticate,
   isSuper,
-  superController.createUser
+  superController.createUser,
 );
 
 // Update a user
@@ -36,20 +36,20 @@ router.get(
   "/exchangerequest",
   authenticate,
   isSuper,
-  consultantController.getexchangerequestAdmin
+  consultantController.getexchangerequestAdmin,
 );
 
 router.get(
   "/allconsultants",
   authenticate,
   isSuper,
-  consultantController.getAllConsultantsSuper
+  consultantController.getAllConsultantsSuper,
 );
 router.get(
   "/allBesion",
   authenticate,
   isSuper,
-  besionController.getAllBesionSuper
+  besionController.getAllBesionSuper,
 );
 
 router.get("/numbers", authenticate, superController.getAllNumbers);
@@ -57,34 +57,34 @@ router.delete(
   "/deleteConsultant/:id",
   authenticate,
   isSuper,
-  superController.deleteConsultant
+  superController.deleteConsultant,
 );
 
 router.delete(
   "/deleteBesion/:id",
   authenticate,
   isSuper,
-  besionController.deleteBesion
+  besionController.deleteBesion,
 );
 // Update slot details
 router.put(
   "/slots/:id/details",
   authenticate,
   isSuper,
-  slotController.updateSlotDetails
+  slotController.updateSlotDetails,
 );
 router.get(
   "/allconsultants",
   authenticate,
   isSuper,
-  consultantController.getAllConsultantsAdmin
+  consultantController.getAllConsultantsAdmin,
 );
 
 router.put(
   "/consultants/:id/status",
   authenticate,
   isSuper,
-  consultantController.updateConsultantStatus
+  consultantController.updateConsultantStatus,
 );
 
 router.post(
@@ -92,36 +92,34 @@ router.post(
   authenticate,
   isSuper,
   upload.single("pdffile"),
-  consultantController.createConsultantAdmin
+  consultantController.createConsultantAdmin,
 );
 
 router.put(
   "/consultants/:id/details",
   authenticate,
   isSuper,
-  consultantController.updateConsultantDetails
+  consultantController.updateConsultantDetails,
 );
 router.put(
   "/consultants/:id/status",
   authenticate,
   isSuper,
-  consultantController.updateConsultantStatus
+  consultantController.updateConsultantStatus,
 );
-
 
 router.get(
   "/avaibility",
   authenticate,
   isSuper,
-  availabilityController.getAllavaibility
+  availabilityController.getAllavaibility,
 );
 
 router.post(
   "/sendAvaibility",
   authenticate,
   isSuper,
-  availabilityController.sendAvaibility
+  availabilityController.sendAvaibility,
 );
-
 
 module.exports = router;

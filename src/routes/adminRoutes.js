@@ -13,87 +13,87 @@ router.post(
   authenticate,
   // isAdmin,
   upload.single("pdffile"),
-  consultantController.createConsultantAdmin
+  consultantController.createConsultantAdmin,
 );
 router.get(
   "/acceuil",
   authenticate,
   // isAdmin,
-  consultantController.getConsultantAdmin
+  consultantController.getConsultantAdmin,
 );
 router.get(
   "/allconsultants",
   authenticate,
   // isAdmin,
-  consultantController.getAllConsultantsAdmin
+  consultantController.getAllConsultantsAdmin,
 );
 router.get(
   "/exchangerequest",
   authenticate,
   // isAdmin,
-  consultantController.getexchangerequestAdmin
+  consultantController.getexchangerequestAdmin,
 );
 router.put(
   "/consultants/:id/status",
   authenticate,
   // isAdmin,
-  consultantController.updateConsultantStatus
+  consultantController.updateConsultantStatus,
 );
 router.put(
   "/consultants/:id/details",
   authenticate,
   // isAdmin,
-  consultantController.updateConsultantDetails
+  consultantController.updateConsultantDetails,
 );
 router.put(
   "/slots/:id/details",
   authenticate,
   // isAdmin,
-  slotController.updateSlotDetails
+  slotController.updateSlotDetails,
 );
 router.put(
   "/slots/:id/status",
   authenticate,
   // isAdmin,
-  slotController.updateSlotStatus
+  slotController.updateSlotStatus,
 );
 router.post(
   "/addBesion",
   authenticate,
   // isAdmin,
-  besionController.createbesion
+  besionController.createbesion,
 );
 router.get(
   "/allBesion",
   authenticate,
   // isAdmin,
-  besionController.getAllBesion
+  besionController.getAllBesion,
 );
 router.get(
   "/getBesion/:id",
   authenticate,
   // isAdmin,
-  besionController.getBesionById
+  besionController.getBesionById,
 );
 router.post(
   "/compare/:id",
   authenticate,
   // isAdmin,
-  besionController.createScore
+  besionController.createScore,
 );
 
 router.get(
   "/getallBesionbyId/:id",
   authenticate,
   // isAdmin,
-  besionController.getAllBesionById
+  besionController.getAllBesionById,
 );
 
 router.get(
   "/getAllConsultantsBesion/:id",
   authenticate,
   // isAdmin,
-  besionController.getAllConsultantsBesionById
+  besionController.getAllConsultantsBesionById,
 );
 
 // New route for PDF data extraction
@@ -102,38 +102,39 @@ router.post(
   authenticate,
   // isAdmin,
   upload.single("pdfFile"),
-  besionController.extractPdfData
+  besionController.extractPdfData,
 );
 
 router.post(
   "/sendsupport",
   authenticate,
   // isAdmin,
-  clientController.sendsupport
+  clientController.sendsupport,
 );
 
 // **New Endpoints**
 router.post(
   "/triggerMatching/:id",
   authenticate,
-  besionController.triggerMatching
+  besionController.triggerMatching,
 );
 
 router.post(
   "/getBesionWithMatching/:id",
   authenticate,
-  besionController.getBesionWithMatchingPost
+  besionController.getBesionWithMatchingPost,
 );
 
 router.get(
   "/fetchBesionMatching/:id",
   authenticate,
-  besionController.fetchBesionMatching
+  besionController.fetchBesionMatching,
 );
 
-router.post("/compareConsultant",
+router.post(
+  "/compareConsultant",
   authenticate,
-  besionController.compareConsultant
+  besionController.compareConsultant,
 );
 
 module.exports = router;

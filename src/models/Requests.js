@@ -8,7 +8,7 @@ const RequestsSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Requests", RequestsSchema);

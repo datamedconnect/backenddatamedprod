@@ -8,95 +8,71 @@ const slotController = require("../controllers/slotController");
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get(
-  "/rechercher",
-  authenticate,
-  clientController.getConsultantClient
-);
+router.get("/rechercher", authenticate, clientController.getConsultantClient);
 
 router.get(
   "/savedprofileConsultants",
   authenticate,
-  savedConsultantController.getSavedProfileConsultant
+  savedConsultantController.getSavedProfileConsultant,
 );
 
 router.post(
   "/consultantsauvegrader/:id",
   authenticate,
-  savedConsultantController.saveConsultant
+  savedConsultantController.saveConsultant,
 );
 
 router.delete(
   "/consultantsauvegrader/:id",
   authenticate,
-  savedConsultantController.unsaveConsultant
+  savedConsultantController.unsaveConsultant,
 );
 
 router.get(
   "/getallBesionbyId/:id",
   authenticate,
-  besionController.getAllBesionById
+  besionController.getAllBesionById,
 );
 
-router.get(
-  "/getBesion/:id",
-  authenticate,
-  besionController.getBesionById
-);
+router.get("/getBesion/:id", authenticate, besionController.getBesionById);
 
-router.post(
-  "/compareclient/:id",
-  authenticate,
-  besionController.createScore
-);
+router.post("/compareclient/:id", authenticate, besionController.createScore);
 
 router.get(
   "/getAllMatchedConsultant/:id",
   authenticate,
-  besionController.getAllConsultantsBesionByIdClient
+  besionController.getAllConsultantsBesionByIdClient,
 );
 
-router.post(
-  "/addBesion",
-  authenticate,
-  besionController.createbesionClient
-);
+router.post("/addBesion", authenticate, besionController.createbesionClient);
 
-router.get(
-  "/getSlots",
-  authenticate,
-  slotController.getSlotsByClient
-);
+router.get("/getSlots", authenticate, slotController.getSlotsByClient);
 
 router.post(
   "/extract-pdf-data",
   authenticate,
   upload.single("pdfFile"),
-  besionController.extractPdfData
+  besionController.extractPdfData,
 );
 
-router.post(
-  "/sendsupport",
-  authenticate,
-  clientController.sendsupport
-);
+router.post("/sendsupport", authenticate, clientController.sendsupport);
 
 router.post(
   "/triggerMatching/:id",
   authenticate,
-  besionController.triggerMatching
+  besionController.triggerMatching,
 );
 
 router.post(
   "/getBesionWithMatching/:id",
   authenticate,
-  besionController.getBesionWithMatchingPost
+  besionController.getBesionWithMatchingPost,
 );
 
 router.get(
   "/fetchBesionMatching/:id",
   authenticate,
-  besionController.fetchBesionMatching
+  besionController.fetchBesionMatching,
 );
 
 module.exports = router;

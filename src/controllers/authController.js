@@ -33,7 +33,7 @@ const signup = async (req, res) => {
     const verificationToken = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
     const loginUrl = `https://datamedconnect.com/verify?token=${verificationToken}`;
 
@@ -325,7 +325,7 @@ const resendCode = async (req, res) => {
 const getUserDetails = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select(
-      "role email companyName name"
+      "role email companyName name",
     );
     if (!user) {
       return res.status(404).json({ message: "User not found" });

@@ -6,18 +6,19 @@ const Slot = require("../models/Slots");
 const Requests = require("../models/Requests");
 const mongoose = require("mongoose");
 const ics = require("ics");
-const { v4: uuidv4 } = require("uuid"); 
-
+const { v4: uuidv4 } = require("uuid");
 
 const getAllLogs = async (req, res) => {
   try {
     const { date } = req.query;
     let logs;
     if (date) {
-      const [year, month, day] = date.split('-').map(Number); // Convert strings to numbers
+      const [year, month, day] = date.split("-").map(Number); // Convert strings to numbers
       const start = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
       const end = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
-      console.log(`Fetching logs from ${start.toISOString()} to ${end.toISOString()}`);
+      console.log(
+        `Fetching logs from ${start.toISOString()} to ${end.toISOString()}`,
+      );
       logs = await Logs.find({
         createdAt: { $gte: start, $lte: end },
       })
@@ -40,7 +41,7 @@ const getAllLogs = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select(
-      "email role name companyName createdAt status"
+      "email role name companyName createdAt status",
     );
     res.json(users);
   } catch (error) {

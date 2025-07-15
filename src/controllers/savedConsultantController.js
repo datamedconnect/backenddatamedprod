@@ -18,14 +18,14 @@ const getSavedConsultants = async (req, res) => {
       client: clientId,
     }).select("consultant");
     const consultantIds = savedConsultants.map((sc) =>
-      sc.consultant.toString()
+      sc.consultant.toString(),
     );
 
     res.status(200).json(consultantIds);
   } catch (error) {
     console.error(
       "Erreur lors de la récupération des consultants enregistrés :",
-      error
+      error,
     );
     res.status(500).json({ message: "Erreur du serveur" });
   }
@@ -87,7 +87,7 @@ const unsaveConsultant = async (req, res) => {
   } catch (error) {
     console.error(
       "Erreur lors de la suppression du consultant de la liste :",
-      error
+      error,
     );
     res.status(500).json({ message: "Erreur du serveur" });
   }

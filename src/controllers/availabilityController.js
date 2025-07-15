@@ -51,7 +51,7 @@ const sendAvaibility = async (req, res) => {
     const createdAt = new Date().toISOString();
     const token = jwt.sign(
       { consultantId, createdAt },
-      process.env.JWT_SECRET || "your_jwt_secret"
+      process.env.JWT_SECRET || "your_jwt_secret",
     );
 
     // Construct the UpdateURL with consultantId and token

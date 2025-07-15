@@ -24,7 +24,7 @@ const downloadConsultantCV = async (req, res) => {
     const consultant = await Consultant.findById(id).populate("Profile").lean();
     console.log(
       "Step 3: Consultant fetched:",
-      consultant ? "Found" : "Not found"
+      consultant ? "Found" : "Not found",
     );
     if (!consultant) {
       return res.status(404).json({ message: "Consultant not found" });
@@ -37,11 +37,11 @@ const downloadConsultantCV = async (req, res) => {
     // Load and compile templates
     const firstPageTemplate = fs.readFileSync(
       path.join(__dirname, "../templates/firstPage.hbs"),
-      "utf8"
+      "utf8",
     );
     const experiencePageTemplate = fs.readFileSync(
       path.join(__dirname, "../templates/experiencePage.hbs"),
-      "utf8"
+      "utf8",
     );
     console.log("Step 5: Templates loaded");
     const compileFirstPage = handlebars.compile(firstPageTemplate);
@@ -51,11 +51,11 @@ const downloadConsultantCV = async (req, res) => {
     // Register partials
     handlebars.registerPartial(
       "header",
-      fs.readFileSync(path.join(__dirname, "../templates/header.hbs"), "utf8")
+      fs.readFileSync(path.join(__dirname, "../templates/header.hbs"), "utf8"),
     );
     handlebars.registerPartial(
       "footer",
-      fs.readFileSync(path.join(__dirname, "../templates/footer.hbs"), "utf8")
+      fs.readFileSync(path.join(__dirname, "../templates/footer.hbs"), "utf8"),
     );
     console.log("Step 7: Partials registered");
 

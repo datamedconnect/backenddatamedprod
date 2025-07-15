@@ -28,13 +28,13 @@ const getConsultantAdmin = async (req, res) => {
 
     // Calculer le nombre de consultants Qualifiés et Non Qualifiés
     const qualifiedCount = consultants.filter(
-      (consultant) => consultant.status === "Qualifié"
+      (consultant) => consultant.status === "Qualifié",
     ).length;
     const notQualifiedCount = consultants.filter(
-      (consultant) => consultant.status === "Non Qualifié"
+      (consultant) => consultant.status === "Non Qualifié",
     ).length;
     const exchangesCount = exchanges.filter(
-      (slot) => slot.status === "En Attente"
+      (slot) => slot.status === "En Attente",
     ).length;
 
     // Calculer le total des statuts à partir du tableau des consultants
@@ -269,7 +269,6 @@ const escapeRegex = (string) =>
 //   }
 // };
 
-
 const getAllConsultantsAdmin = async (req, res) => {
   try {
     const search = req.query.search || "";
@@ -380,7 +379,7 @@ const getAllConsultantsAdmin = async (req, res) => {
     });
     console.log(
       "Step 4: Aggregation pipeline:",
-      JSON.stringify(pipeline, null, 2)
+      JSON.stringify(pipeline, null, 2),
     );
 
     const result = await Consultant.aggregate(pipeline);
@@ -507,7 +506,7 @@ const getAllConsultantsSuper = async (req, res) => {
     });
     console.log(
       "Step 4: Aggregation pipeline:",
-      JSON.stringify(pipeline, null, 2)
+      JSON.stringify(pipeline, null, 2),
     );
 
     const result = await Consultant.aggregate(pipeline);
@@ -546,11 +545,11 @@ const createConsultantAdmin = async (req, res) => {
     // Journaliser tous les détails de la requête entrante
     console.log(
       "Étape 2 : En-têtes de la requête :",
-      JSON.stringify(req.headers, null, 2)
+      JSON.stringify(req.headers, null, 2),
     );
     console.log(
       "Étape 3 : Corps de la requête (brut) :",
-      req.body ? JSON.stringify(req.body, null, 2) : "indéfini"
+      req.body ? JSON.stringify(req.body, null, 2) : "indéfini",
     );
     console.log(
       "Étape 4 : Fichier de la requête :",
@@ -561,13 +560,13 @@ const createConsultantAdmin = async (req, res) => {
             size: req.file.size,
             mimetype: req.file.mimetype,
           }
-        : "Aucun fichier reçu"
+        : "Aucun fichier reçu",
     );
 
     // Vérifier si Multer a correctement traité le fichier
     if (!req.file) {
       console.log(
-        "Étape 5 : Aucun fichier détecté - problème potentiel de configuration Multer"
+        "Étape 5 : Aucun fichier détecté - problème potentiel de configuration Multer",
       );
       return res.status(400).json({ message: "Aucun fichier PDF téléchargé" });
     }
@@ -575,7 +574,7 @@ const createConsultantAdmin = async (req, res) => {
     // Vérifier que le nom du champ correspond à l'attente
     if (req.file.fieldname !== "pdffile") {
       console.log(
-        `Étape 6 : Incohérence de nom de champ - Attendu : "pdffile", Reçu : "${req.file.fieldname}"`
+        `Étape 6 : Incohérence de nom de champ - Attendu : "pdffile", Reçu : "${req.file.fieldname}"`,
       );
       return res.status(400).json({
         message: `Nom de champ inattendu : "${req.file.fieldname}". Attendu "pdffile".`,
@@ -599,7 +598,7 @@ const createConsultantAdmin = async (req, res) => {
     // Valider les champs requis
     if (!email || !phone) {
       console.log(
-        "Étape 9 : Échec de la validation - Email ou téléphone manquant"
+        "Étape 9 : Échec de la validation - Email ou téléphone manquant",
       );
       return res
         .status(400)
@@ -642,7 +641,7 @@ const createConsultantAdmin = async (req, res) => {
     if (req.file) {
       if (req.file.size > 50 * 1024 * 1024) {
         console.log(
-          "Étape 15 : La taille du fichier dépasse la limite de 50 Mo"
+          "Étape 15 : La taille du fichier dépasse la limite de 50 Mo",
         );
         return res.status(400).json({
           message: "Fichier trop volumineux. La taille maximale est de 50 Mo.",
@@ -652,19 +651,19 @@ const createConsultantAdmin = async (req, res) => {
       const pdfText = await extractTextFromPDF(req.file.buffer);
       console.log(
         "Étape 16 : Texte du PDF extrait, longueur :",
-        pdfText.length
+        pdfText.length,
       );
 
       const cvDataString = await grokService.extractCVData(pdfText);
       console.log(
         "Étape 17 : Données du CV extraites par Grok :",
-        cvDataString
+        cvDataString,
       );
 
       if (!cvDataString || typeof cvDataString !== "string") {
         console.log("Étape 18 : Données du CV invalides de Grok");
         throw new Error(
-          "Données du CV invalides retournées par le service Grok"
+          "Données du CV invalides retournées par le service Grok",
         );
       }
 
@@ -678,13 +677,13 @@ const createConsultantAdmin = async (req, res) => {
             .trim();
       console.log(
         "Étape 18.5 : Chaîne de données du CV nettoyée :",
-        cleanedCvDataString
+        cleanedCvDataString,
       );
 
       const cvData = JSON.parse(cleanedCvDataString);
       console.log(
         "Étape 19 : Données du CV analysées :",
-        JSON.stringify(cvData, null, 2)
+        JSON.stringify(cvData, null, 2),
       );
 
       const profileData = { ...cvData, consultantId: consultant._id };
@@ -715,7 +714,8 @@ const createConsultantAdmin = async (req, res) => {
 
 const uploadCV = async (req, res) => {
   try {
-    const { email, phone, missionType, tjmOrSalary, location, sourcedBy  } = req.body;
+    const { email, phone, missionType, tjmOrSalary, location, sourcedBy } =
+      req.body;
 
     // Valider les champs requis
     if (!email || !phone) {
@@ -884,7 +884,7 @@ const updateConsultant = async (req, res) => {
 
     const updatedConsultant = await consultantService.updateConsultant(
       id,
-      updateData
+      updateData,
     );
 
     // Log updated document
@@ -911,7 +911,7 @@ const updateConsultantStatus = async (req, res) => {
       "Étape 3 : Nouveau statut :",
       status,
       "qualifiedBy:",
-      qualifiedBy
+      qualifiedBy,
     );
 
     // Validate both fields
@@ -925,7 +925,7 @@ const updateConsultantStatus = async (req, res) => {
     const updatedConsultant = await Consultant.findByIdAndUpdate(
       id,
       { status, qualifiedBy },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedConsultant) {
@@ -942,7 +942,7 @@ const updateConsultantStatus = async (req, res) => {
     }
     console.error(
       "Erreur lors de la mise à jour du statut du consultant :",
-      error
+      error,
     );
     res.status(500).json({ message: "Erreur du serveur" });
   }
@@ -992,7 +992,7 @@ const updateConsultantDetails = async (req, res) => {
     const updatedConsultant = await Consultant.findByIdAndUpdate(
       id,
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     // Check if the consultant exists
@@ -1019,7 +1019,7 @@ const updateConsultantDetails = async (req, res) => {
     }
     console.error(
       "Erreur lors de la mise à jour des détails du consultant :",
-      error
+      error,
     );
     res.status(500).json({ message: "Erreur du serveur" });
   }
@@ -1105,7 +1105,7 @@ const updatedAvailability = async (req, res) => {
         available: availableDate,
         lastUpdated: new Date(), // Set to today's date
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     // Check if consultant exists
@@ -1136,7 +1136,7 @@ const verifyAvailabilityToken = async (req, res) => {
     // Verify the JWT token
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "your_jwt_secret"
+      process.env.JWT_SECRET || "your_jwt_secret",
     );
     const { consultantId, createdAt } = decoded;
 

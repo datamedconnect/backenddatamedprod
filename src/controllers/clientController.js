@@ -19,24 +19,23 @@ const getConsultantClient = async (req, res) => {
     const searchQuery = req.query.search || ""; // Get search term from query params
 
     // Fetch saved consultants for the user
-    const savedConsultants = await SavedConsultant.find({ client: userId }).select("consultant");
-    const savedConsultantSet = new Set(savedConsultants.map(sc => sc.consultant.toString()));
+    const savedConsultants = await SavedConsultant.find({
+      client: userId,
+    }).select("consultant");
+    const savedConsultantSet = new Set(
+      savedConsultants.map((sc) => sc.consultant.toString()),
+    );
 
     // Fetch all consultants and populate their profiles
     const consultants = await Consultant.find({}).populate("Profile");
-    console.log(
-      "Retrieved consultants:",
-      consultants.map(c => ({ _id: c._id, Location: c.Location, Status: c.status }))
-    );
-
     // Filter out consultants with missing or invalid profiles
-    const filteredConsultants = consultants.filter(consultant => {
+    const filteredConsultants = consultants.filter((consultant) => {
       const name = consultant.Profile?.Name;
       return name && name !== "Non spécifié";
     });
     console.log(
       "Filtered consultants:",
-      filteredConsultants.map(c => ({ _id: c._id, Location: c.Location }))
+      filteredConsultants.map((c) => ({ _id: c._id, Location: c.Location })),
     );
 
     // Create a FlexSearch Document instance for multi-field indexing
@@ -50,18 +49,22 @@ const getConsultantClient = async (req, res) => {
     });
 
     // Index the filtered consultants
-    filteredConsultants.forEach(consultant => {
+    filteredConsultants.forEach((consultant) => {
       const profile = consultant.Profile;
       // This check is redundant due to filtering, but kept for safety
       if (!profile || !profile.Name || profile.Name === "Non spécifié") {
-        console.warn(`Skipping consultant ${consultant._id} due to missing or invalid Profile`);
+        console.warn(
+          `Skipping consultant ${consultant._id} due to missing or invalid Profile`,
+        );
         return;
       }
       const document = {
         id: consultant._id.toString(),
         Name: typeof profile.Name === "string" ? profile.Name : "",
         Poste: Array.isArray(profile.Poste) ? profile.Poste.join(" ") : "",
-        Location: Array.isArray(consultant.Location) ? consultant.Location.join(" ") : "",
+        Location: Array.isArray(consultant.Location)
+          ? consultant.Location.join(" ")
+          : "",
         Skills: Array.isArray(profile.Skills) ? profile.Skills.join(" ") : "",
       };
       index.add(document);
@@ -70,16 +73,21 @@ const getConsultantClient = async (req, res) => {
     // Perform search if a query is provided, otherwise return all filtered consultants
     let searchResults = filteredConsultants;
     if (searchQuery) {
-      const fieldResults = index.search(searchQuery, { limit: 10, suggest: true });
-      const resultIds = new Set();
-      fieldResults.forEach(fieldResult => {
-        fieldResult.result.forEach(id => resultIds.add(id));
+      const fieldResults = index.search(searchQuery, {
+        limit: 10,
+        suggest: true,
       });
-      searchResults = filteredConsultants.filter(c => resultIds.has(c._id.toString()));
+      const resultIds = new Set();
+      fieldResults.forEach((fieldResult) => {
+        fieldResult.result.forEach((id) => resultIds.add(id));
+      });
+      searchResults = filteredConsultants.filter((c) =>
+        resultIds.has(c._id.toString()),
+      );
     }
 
     // Map to final result format
-    const result = searchResults.map(consultant => ({
+    const result = searchResults.map((consultant) => ({
       _id: consultant._id,
       profileid: consultant.Profile?._id,
       Name: consultant.Profile ? abbreviateName(consultant.Profile.Name) : null,
@@ -178,25 +186,25 @@ const sendsupport = async (req, res) => {
                 <tr>
                   <td style="padding: 5px; font-weight: bold; border-bottom: 1px solid #E5E7EB;">Nom :</td>
                   <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(
-                    name
+                    name,
                   )}</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px; font-weight: bold; border-bottom: 1px solid #E5E7EB;">Email :</td>
                   <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(
-                    email
+                    email,
                   )}</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px; font-weight: bold; border-bottom: 1px solid #E5E7EB;">Type de sujet :</td>
                   <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(
-                    subjectType
+                    subjectType,
                   )}</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px; font-weight: bold; border-bottom: 1px solid #E5E7EB; vertical-align: top;">Message :</td>
                   <td style="padding: 5px; border-bottom: 1px solid #E5E7EB;">${encode(
-                    message
+                    message,
                   )}</td>
                 </tr>
               </table>

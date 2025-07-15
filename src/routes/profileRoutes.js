@@ -15,7 +15,7 @@ router.put("/:id", profileController.updateProfile);
 router.post(
   "/upload-picture/:id",
   upload.single("profilePicture"),
-  profileController.uploadProfilePicture
+  profileController.uploadProfilePicture,
 );
 
 module.exports = router;

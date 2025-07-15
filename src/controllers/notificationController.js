@@ -8,7 +8,9 @@ const getNotifications = async (req, res) => {
     if (read !== undefined) {
       query.read = read === "true";
     }
-    const notifications = await Notification.find(query).sort({ createdAt: -1 });
+    const notifications = await Notification.find(query).sort({
+      createdAt: -1,
+    });
     res.status(200).json(notifications);
   } catch (error) {
     console.error("Error fetching notifications:", error);

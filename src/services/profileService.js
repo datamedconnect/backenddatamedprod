@@ -11,7 +11,11 @@ const createProfile = async (data) => {
 };
 
 const updateProfile = async (profileId, newData) => {
-  const profile = await ProfileConsultant.findByIdAndUpdate(profileId, newData, { new: true });
+  const profile = await ProfileConsultant.findByIdAndUpdate(
+    profileId,
+    newData,
+    { new: true },
+  );
   if (!profile) {
     throw new Error("Profile not found");
   }
@@ -28,7 +32,12 @@ const getProfileById = async (id) => {
 
 const getProfileByConsultantId = async (consultantId) => {
   const profile = await ProfileConsultant.findOne({ consultantId });
-  return profile; 
+  return profile;
 };
 
-module.exports = { createProfile, updateProfile, getProfileById, getProfileByConsultantId };
+module.exports = {
+  createProfile,
+  updateProfile,
+  getProfileById,
+  getProfileByConsultantId,
+};

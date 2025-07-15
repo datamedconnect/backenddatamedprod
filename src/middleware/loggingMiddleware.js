@@ -4,8 +4,8 @@ const onFinished = require("on-finished");
 const mongoose = require("mongoose");
 const Logs = require("../models/Logs");
 const Slot = require("../models/Slots"); // Adjust path if needed
-const Consultant =  require("../models/Consultant");
-const Besion =  require("../models/Besion");
+const Consultant = require("../models/Consultant");
+const Besion = require("../models/Besion");
 const User = require("../models/User");
 const SavedConsultant = require("../models/SavedConsultant");
 
@@ -30,7 +30,13 @@ const logStream = new Writable({
 const logger = pino({ level: "info" }, logStream);
 
 // Liste des types d'entités autorisés par le schéma Logs
-const allowedEntityTypes = ["Slots", "Consultant", "Besion", "User", "SavedConsultant"];
+const allowedEntityTypes = [
+  "Slots",
+  "Consultant",
+  "Besion",
+  "User",
+  "SavedConsultant",
+];
 
 // Keywords pour déduire les types d'entités à partir des chemins
 const entityKeywords = {
@@ -60,80 +66,239 @@ function getEntityType(path) {
 // Mapping des méthodes HTTP et routes vers les types d'actions et entités
 const actionMappings = {
   // Slot Routes
-  "POST:/api/slots/create": { actionType: "CRÉATION_CRENEAU", entityType: "Slots" },
-  "GET:/api/slots/allslots": { actionType: "LECTURE_CRENEAU", entityType: "Slots" },
-  "GET:/api/slots/slot/:id": { actionType: "LECTURE_CRENEAU", entityType: "Slots" },
-  "DELETE:/api/slots/slots/:id": { actionType: "SUPPRESSION_CRENEAU", entityType: "Slots" },
-  "PUT:/api/slots/slots/:id/status": { actionType: "MISE_A_JOUR_CRENEAU", entityType: "Slots" },
-  "GET:/api/slots/getAllConsultantsSlots/:id": { actionType: "LECTURE_CONSULTANT_CRENEAU", entityType: "Slots" },
+  "POST:/api/slots/create": {
+    actionType: "CRÉATION_CRENEAU",
+    entityType: "Slots",
+  },
+  "GET:/api/slots/allslots": {
+    actionType: "LECTURE_CRENEAU",
+    entityType: "Slots",
+  },
+  "GET:/api/slots/slot/:id": {
+    actionType: "LECTURE_CRENEAU",
+    entityType: "Slots",
+  },
+  "DELETE:/api/slots/slots/:id": {
+    actionType: "SUPPRESSION_CRENEAU",
+    entityType: "Slots",
+  },
+  "PUT:/api/slots/slots/:id/status": {
+    actionType: "MISE_A_JOUR_CRENEAU",
+    entityType: "Slots",
+  },
+  "GET:/api/slots/getAllConsultantsSlots/:id": {
+    actionType: "LECTURE_CONSULTANT_CRENEAU",
+    entityType: "Slots",
+  },
 
   // Consultant Routes
-  "POST:/api/consultants": { actionType: "CRÉATION_CONSULTANT", entityType: "Consultant" },
-  "GET:/api/consultants/:id": { actionType: "LECTURE_CONSULTANT", entityType: "Consultant" },
-  "PUT:/api/consultants/:id": { actionType: "MISE_A_JOUR_CONSULTANT", entityType: "Consultant" },
+  "POST:/api/consultants": {
+    actionType: "CRÉATION_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "GET:/api/consultants/:id": {
+    actionType: "LECTURE_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "PUT:/api/consultants/:id": {
+    actionType: "MISE_A_JOUR_CONSULTANT",
+    entityType: "Consultant",
+  },
 
   // Admin Routes
-  "POST:/api/admin/consultants": { actionType: "CRÉATION_CONSULTANT", entityType: "Consultant" },
-  "GET:/api/admin/acceuil": { actionType: "LECTURE_ADMIN_CONSULTANTS", entityType: "Consultant" },
-  "GET:/api/admin/allconsultants": { actionType: "LECTURE_ADMIN_CONSULTANTS", entityType: "Consultant" },
-  "GET:/api/admin/exchangerequest": { actionType: "LECTURE_REQUETE_ECHANGE", entityType: "Slots" },
-  "PUT:/api/admin/consultants/:id/status": { actionType: "MISE_A_JOUR_STATUT_CONSULTANT", entityType: "Consultant" },
-  "PUT:/api/admin/consultants/:id/details": { actionType: "MISE_A_JOUR_DETAILS_CONSULTANT", entityType: "Consultant" },
-  "PUT:/api/admin/slots/:id/details": { actionType: "MISE_A_JOUR_CRENEAU", entityType: "Slots" },
-  "PUT:/api/admin/slots/:id/status": { actionType: "MISE_A_JOUR_CRENEAU", entityType: "Slots" },
-  "POST:/api/admin/addBesion": { actionType: "CRÉATION_BESOIN", entityType: "Besion" },
-  "GET:/api/admin/allBesion": { actionType: "LECTURE_BESOIN", entityType: "Besion" },
-  "GET:/api/admin/getBesion/:id": { actionType: "LECTURE_BESOIN", entityType: "Besion" },
-  "POST:/api/admin/compare/:id": { actionType: "CRÉATION_SCORE", entityType: "Besion" },
-  "GET:/api/admin/getAllConsultantsBesion/:id": { actionType: "LECTURE_CONSULTANT_BESOIN", entityType: "Consultant" },
+  "POST:/api/admin/consultants": {
+    actionType: "CRÉATION_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "GET:/api/admin/acceuil": {
+    actionType: "LECTURE_ADMIN_CONSULTANTS",
+    entityType: "Consultant",
+  },
+  "GET:/api/admin/allconsultants": {
+    actionType: "LECTURE_ADMIN_CONSULTANTS",
+    entityType: "Consultant",
+  },
+  "GET:/api/admin/exchangerequest": {
+    actionType: "LECTURE_REQUETE_ECHANGE",
+    entityType: "Slots",
+  },
+  "PUT:/api/admin/consultants/:id/status": {
+    actionType: "MISE_A_JOUR_STATUT_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "PUT:/api/admin/consultants/:id/details": {
+    actionType: "MISE_A_JOUR_DETAILS_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "PUT:/api/admin/slots/:id/details": {
+    actionType: "MISE_A_JOUR_CRENEAU",
+    entityType: "Slots",
+  },
+  "PUT:/api/admin/slots/:id/status": {
+    actionType: "MISE_A_JOUR_CRENEAU",
+    entityType: "Slots",
+  },
+  "POST:/api/admin/addBesion": {
+    actionType: "CRÉATION_BESOIN",
+    entityType: "Besion",
+  },
+  "GET:/api/admin/allBesion": {
+    actionType: "LECTURE_BESOIN",
+    entityType: "Besion",
+  },
+  "GET:/api/admin/getBesion/:id": {
+    actionType: "LECTURE_BESOIN",
+    entityType: "Besion",
+  },
+  "POST:/api/admin/compare/:id": {
+    actionType: "CRÉATION_SCORE",
+    entityType: "Besion",
+  },
+  "GET:/api/admin/getAllConsultantsBesion/:id": {
+    actionType: "LECTURE_CONSULTANT_BESOIN",
+    entityType: "Consultant",
+  },
 
   // Auth Routes
-  "POST:/api/auth/signup": { actionType: "CRÉATION_UTILISATEUR", entityType: "User" },
+  "POST:/api/auth/signup": {
+    actionType: "CRÉATION_UTILISATEUR",
+    entityType: "User",
+  },
   "POST:/api/auth/login": { actionType: "CONNEXION", entityType: "User" },
 
   // Client Routes
-  "GET:/api/client/rechercher": { actionType: "LECTURE_CONSULTANT", entityType: "Consultant" },
-  "GET:/api/client/savedprofileConsultants": { actionType: "LECTURE_CONSULTANT_ENREGISTRÉ", entityType: "Consultant" },
-  "POST:/api/client/consultantsauvegrader/:id": { actionType: "CONSULTANT_ENREGISTRÉ", entityType: "SavedConsultant" },
-  "DELETE:/api/client/consultantsauvegrader/:id": { actionType: "SUPPRESSION_CONSULTANT_ENREGISTRÉ", entityType: "SavedConsultant" },
-  "GET:/api/client/getallBesionbyId/:id": { actionType: "LECTURE_BESOIN", entityType: "Besion" },
-  "GET:/api/client/getBesion/:id": { actionType: "LECTURE_BESOIN", entityType: "Besion" },
-  "POST:/api/client/compareclient/:id": { actionType: "CRÉATION_SCORE", entityType: "Besion" },
-  "GET:/api/client/getAllMatchedConsultant/:id": { actionType: "LECTURE_CONSULTANT_CORRESPONDANT", entityType: "Consultant" },
-  "POST:/api/client/addBesion": { actionType: "CRÉATION_BESOIN", entityType: "Besion" },
-  "GET:/api/client/getSlots": { actionType: "LECTURE_CRENEAU", entityType: "Slots" },
+  "GET:/api/client/rechercher": {
+    actionType: "LECTURE_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "GET:/api/client/savedprofileConsultants": {
+    actionType: "LECTURE_CONSULTANT_ENREGISTRÉ",
+    entityType: "Consultant",
+  },
+  "POST:/api/client/consultantsauvegrader/:id": {
+    actionType: "CONSULTANT_ENREGISTRÉ",
+    entityType: "SavedConsultant",
+  },
+  "DELETE:/api/client/consultantsauvegrader/:id": {
+    actionType: "SUPPRESSION_CONSULTANT_ENREGISTRÉ",
+    entityType: "SavedConsultant",
+  },
+  "GET:/api/client/getallBesionbyId/:id": {
+    actionType: "LECTURE_BESOIN",
+    entityType: "Besion",
+  },
+  "GET:/api/client/getBesion/:id": {
+    actionType: "LECTURE_BESOIN",
+    entityType: "Besion",
+  },
+  "POST:/api/client/compareclient/:id": {
+    actionType: "CRÉATION_SCORE",
+    entityType: "Besion",
+  },
+  "GET:/api/client/getAllMatchedConsultant/:id": {
+    actionType: "LECTURE_CONSULTANT_CORRESPONDANT",
+    entityType: "Consultant",
+  },
+  "POST:/api/client/addBesion": {
+    actionType: "CRÉATION_BESOIN",
+    entityType: "Besion",
+  },
+  "GET:/api/client/getSlots": {
+    actionType: "LECTURE_CRENEAU",
+    entityType: "Slots",
+  },
 
   // Email Routes
-  "POST:/api/email/contact": { actionType: "ENVOI_EMAIL_CONTACT", entityType: "Email" },
-  "POST:/api/email/demo": { actionType: "ENVOI_EMAIL_DEMO", entityType: "Email" },
+  "POST:/api/email/contact": {
+    actionType: "ENVOI_EMAIL_CONTACT",
+    entityType: "Email",
+  },
+  "POST:/api/email/demo": {
+    actionType: "ENVOI_EMAIL_DEMO",
+    entityType: "Email",
+  },
 
   // OTP Routes
   "POST:/api/otp/send": { actionType: "ENVOI_OTP", entityType: "OTP" },
   "POST:/api/otp/verify": { actionType: "VERIFICATION_OTP", entityType: "OTP" },
 
   // Profile Routes
-  "GET:/api/profile/:id": { actionType: "LECTURE_PROFIL", entityType: "Profile" },
+  "GET:/api/profile/:id": {
+    actionType: "LECTURE_PROFIL",
+    entityType: "Profile",
+  },
   "POST:/api/profile": { actionType: "CRÉATION_PROFIL", entityType: "Profile" },
-  "PUT:/api/profile/:id": { actionType: "MISE_A_JOUR_PROFIL", entityType: "Profile" },
-  "POST:/api/profile/upload-picture/:id": { actionType: "TÉLÉCHARGEMENT_PHOTO_PROFIL", entityType: "Profile" },
+  "PUT:/api/profile/:id": {
+    actionType: "MISE_A_JOUR_PROFIL",
+    entityType: "Profile",
+  },
+  "POST:/api/profile/upload-picture/:id": {
+    actionType: "TÉLÉCHARGEMENT_PHOTO_PROFIL",
+    entityType: "Profile",
+  },
 
   // Super Routes
-  "GET:/api/super/getSuper": { actionType: "LECTURE_SUPER", entityType: "Super" },
-  "GET:/api/super/users": { actionType: "LECTURE_UTILISATEUR", entityType: "User" },
+  "GET:/api/super/getSuper": {
+    actionType: "LECTURE_SUPER",
+    entityType: "Super",
+  },
+  "GET:/api/super/users": {
+    actionType: "LECTURE_UTILISATEUR",
+    entityType: "User",
+  },
   "GET:/api/super/demos": { actionType: "LECTURE_DEMO", entityType: "Super" },
-  "POST:/api/super/createuseradmin": { actionType: "CRÉATION_UTILISATEUR_ADMIN", entityType: "User" },
-  "PUT:/api/super/users/:id": { actionType: "MISE_A_JOUR_UTILISATEUR", entityType: "User" },
-  "DELETE:/api/super/users/:id": { actionType: "SUPPRESSION_UTILISATEUR", entityType: "User" },
-  "GET:/api/super/exchangerequest": { actionType: "LECTURE_REQUETE_ECHANGE", entityType: "Slots" },
-  "GET:/api/super/allconsultants": { actionType: "LECTURE_TOUS_CONSULTANTS", entityType: "Consultant" },
-  "GET:/api/super/allBesion": { actionType: "LECTURE_TOUS_BESOINS", entityType: "Besion" },
-  "GET:/api/super/numbers": { actionType: "LECTURE_CHIFFRES", entityType: "Super" },
-  "DELETE:/api/super/deleteBesion/:id": { actionType: "SUPPRESSION_BESOIN", entityType: "Besion" },
-  "PUT:/api/super/slots/:id/details": { actionType: "MISE_A_JOUR_CRENEAU", entityType: "Slots" },
-  "PUT:/api/super/consultants/:id/status": { actionType: "MISE_A_JOUR_STATUT_CONSULTANT", entityType: "Consultant" },
-  "POST:/api/super/consultants": { actionType: "CRÉATION_CONSULTANT", entityType: "Consultant" },
-  "PUT:/api/super/consultants/:id/details": { actionType: "MISE_A_JOUR_DETAILS_CONSULTANT", entityType: "Consultant" },
-  "DELETE:/api/super/delete/:id": { actionType: "SUPPRESSION_CRENEAU", entityType: "Slots" },
+  "POST:/api/super/createuseradmin": {
+    actionType: "CRÉATION_UTILISATEUR_ADMIN",
+    entityType: "User",
+  },
+  "PUT:/api/super/users/:id": {
+    actionType: "MISE_A_JOUR_UTILISATEUR",
+    entityType: "User",
+  },
+  "DELETE:/api/super/users/:id": {
+    actionType: "SUPPRESSION_UTILISATEUR",
+    entityType: "User",
+  },
+  "GET:/api/super/exchangerequest": {
+    actionType: "LECTURE_REQUETE_ECHANGE",
+    entityType: "Slots",
+  },
+  "GET:/api/super/allconsultants": {
+    actionType: "LECTURE_TOUS_CONSULTANTS",
+    entityType: "Consultant",
+  },
+  "GET:/api/super/allBesion": {
+    actionType: "LECTURE_TOUS_BESOINS",
+    entityType: "Besion",
+  },
+  "GET:/api/super/numbers": {
+    actionType: "LECTURE_CHIFFRES",
+    entityType: "Super",
+  },
+  "DELETE:/api/super/deleteBesion/:id": {
+    actionType: "SUPPRESSION_BESOIN",
+    entityType: "Besion",
+  },
+  "PUT:/api/super/slots/:id/details": {
+    actionType: "MISE_A_JOUR_CRENEAU",
+    entityType: "Slots",
+  },
+  "PUT:/api/super/consultants/:id/status": {
+    actionType: "MISE_A_JOUR_STATUT_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "POST:/api/super/consultants": {
+    actionType: "CRÉATION_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "PUT:/api/super/consultants/:id/details": {
+    actionType: "MISE_A_JOUR_DETAILS_CONSULTANT",
+    entityType: "Consultant",
+  },
+  "DELETE:/api/super/delete/:id": {
+    actionType: "SUPPRESSION_CRENEAU",
+    entityType: "Slots",
+  },
 };
 
 // Types d'actions par défaut pour les méthodes HTTP sans mappage spécifique
@@ -149,7 +314,9 @@ const loggingMiddleware = (req, res, next) => {
   const method = req.method;
   const path = req.path;
 
-  const normalizedPath = path.replace(/\/[0-9a-fA-F]{24}/, "/:id").replace(/\/$/, "");
+  const normalizedPath = path
+    .replace(/\/[0-9a-fA-F]{24}/, "/:id")
+    .replace(/\/$/, "");
   const key = `${method}:${normalizedPath}`;
 
   let actionInfo = actionMappings[key];
@@ -190,7 +357,11 @@ const loggingMiddleware = (req, res, next) => {
       if (responseData.status) {
         metadata.status = responseData.status;
       }
-      if (Array.isArray(responseData) || responseData.consultants || responseData.slots) {
+      if (
+        Array.isArray(responseData) ||
+        responseData.consultants ||
+        responseData.slots
+      ) {
         const count = Array.isArray(responseData)
           ? responseData.length
           : responseData.consultants?.length || responseData.slots?.length || 0;
@@ -202,7 +373,11 @@ const loggingMiddleware = (req, res, next) => {
     }
 
     // Pour les suppressions, définir relatedEntity avec req.params.id si disponible
-    if (method === "DELETE" && req.params.id && allowedEntityTypes.includes(entityType)) {
+    if (
+      method === "DELETE" &&
+      req.params.id &&
+      allowedEntityTypes.includes(entityType)
+    ) {
       relatedEntity = { entityType, entityId: req.params.id };
       metadata.entityId = req.params.id;
     }
@@ -213,20 +388,30 @@ const loggingMiddleware = (req, res, next) => {
         let entityDoc;
         switch (relatedEntity.entityType) {
           case "Slots":
-            entityDoc = await Slot.findById(relatedEntity.entityId).select("exchangeNumber");
-            relatedEntity.entityName = entityDoc?.exchangeNumber || "Créneau inconnu";
+            entityDoc = await Slot.findById(relatedEntity.entityId).select(
+              "exchangeNumber",
+            );
+            relatedEntity.entityName =
+              entityDoc?.exchangeNumber || "Créneau inconnu";
             break;
           case "Consultant":
-            entityDoc = await Consultant.findById(relatedEntity.entityId).select("Email");
+            entityDoc = await Consultant.findById(
+              relatedEntity.entityId,
+            ).select("Email");
             relatedEntity.entityName = entityDoc?.Email || "Consultant inconnu";
             break;
           case "Besion":
-            entityDoc = await Besion.findById(relatedEntity.entityId).select("nomClient");
+            entityDoc = await Besion.findById(relatedEntity.entityId).select(
+              "nomClient",
+            );
             relatedEntity.entityName = entityDoc?.nomClient || "Besoin inconnu";
             break;
           case "User":
-            entityDoc = await User.findById(relatedEntity.entityId).select("email");
-            relatedEntity.entityName = entityDoc?.email || "Utilisateur inconnu";
+            entityDoc = await User.findById(relatedEntity.entityId).select(
+              "email",
+            );
+            relatedEntity.entityName =
+              entityDoc?.email || "Utilisateur inconnu";
             break;
           case "SavedConsultant":
             entityDoc = await SavedConsultant.findById(relatedEntity.entityId)
@@ -238,7 +423,10 @@ const loggingMiddleware = (req, res, next) => {
             break;
         }
       } catch (fetchError) {
-        console.error("Erreur lors de la récupération du nom de l'entité:", fetchError);
+        console.error(
+          "Erreur lors de la récupération du nom de l'entité:",
+          fetchError,
+        );
         relatedEntity.entityName = "Erreur de récupération";
       }
     }

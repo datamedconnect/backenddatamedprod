@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User"); 
+const User = require("../models/User");
 const authenticate = (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
@@ -18,32 +18,43 @@ const authenticate = (req, res, next) => {
 
 const isAdmin = (req, res, next) => {
   // Fetch role from DB if needed (optional)
-  User.findById(req.user.id).select("role").then(user => {
-    if (!user || user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied: Admins only" });
-    }
-    next();
-  }).catch(() => res.status(500).json({ message: "Server error" }));
+  User.findById(req.user.id)
+    .select("role")
+    .then((user) => {
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied: Admins only" });
+      }
+      next();
+    })
+    .catch(() => res.status(500).json({ message: "Server error" }));
 };
 
 const isClient = (req, res, next) => {
   // Fetch role from DB if needed (optional)
-  User.findById(req.user.id).select("role").then(user => {
-    if (!user || user.role !== "client") {
-      return res.status(403).json({ message: "Access denied: Clients only" });
-    }
-    next();
-  }).catch(() => res.status(500).json({ message: "Server error" }));
+  User.findById(req.user.id)
+    .select("role")
+    .then((user) => {
+      if (!user || user.role !== "client") {
+        return res.status(403).json({ message: "Access denied: Clients only" });
+      }
+      next();
+    })
+    .catch(() => res.status(500).json({ message: "Server error" }));
 };
 
 const isSuper = (req, res, next) => {
   // Fetch role from DB if needed (optional)
-  User.findById(req.user.id).select("role").then(user => {
-    if (!user || user.role !== "superadmin") {
-      return res.status(403).json({ message: "Access denied: Superadmins only" });
-    }
-    next();
-  }).catch(() => res.status(500).json({ message: "Server error" }));
+  User.findById(req.user.id)
+    .select("role")
+    .then((user) => {
+      if (!user || user.role !== "superadmin") {
+        return res
+          .status(403)
+          .json({ message: "Access denied: Superadmins only" });
+      }
+      next();
+    })
+    .catch(() => res.status(500).json({ message: "Server error" }));
 };
 
 module.exports = { authenticate, isAdmin, isClient, isSuper };

@@ -35,7 +35,7 @@ const consultantSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Ensure Location is always an array
@@ -44,12 +44,12 @@ consultantSchema.pre("save", function (next) {
     this.Location = [this.Location];
     console.log(
       `Pre-save: Converted Location to array for consultant ${this._id}:`,
-      this.Location
+      this.Location,
     );
   } else if (!this.Location) {
     this.Location = [];
     console.log(
-      `Pre-save: Set Location to empty array for consultant ${this._id}`
+      `Pre-save: Set Location to empty array for consultant ${this._id}`,
     );
   }
   next();
@@ -63,7 +63,7 @@ consultantSchema.pre("findOneAndUpdate", function (next) {
       update.Location = [update.Location];
       console.log(
         `Pre-update: Converted Location to array for update:`,
-        update.Location
+        update.Location,
       );
     } else if (update.Location === null) {
       update.Location = [];
@@ -74,14 +74,14 @@ consultantSchema.pre("findOneAndUpdate", function (next) {
     console.log(
       `Pre-update: Setting qualifiedBy to ${
         update.qualifiedBy
-      } for consultant ID ${this.getQuery()._id}`
+      } for consultant ID ${this.getQuery()._id}`,
     );
   }
   if (update.sourcedBy) {
     console.log(
       `Pre-update: Setting sourcedBy to ${
         update.sourcedBy
-      } for consultant ID ${this.getQuery()._id}`
+      } for consultant ID ${this.getQuery()._id}`,
     );
   }
   next();

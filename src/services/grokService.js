@@ -96,7 +96,7 @@ const extractCVData = async (pdfText) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.GROK_API_KEY}`,
         },
-      }
+      },
     );
 
     let content = response.data.choices[0].message.content.trim();
@@ -110,7 +110,7 @@ const extractCVData = async (pdfText) => {
     return content;
   } catch (error) {
     throw new Error(
-      `Erreur lors de l'extraction des données via l'API Grok : ${error.message}`
+      `Erreur lors de l'extraction des données via l'API Grok : ${error.message}`,
     );
   }
 };

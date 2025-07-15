@@ -1,8 +1,10 @@
+require("./config/instruments");
+require('dotenv').config();
+
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const connectDB = require("./database/connection");
 const consultantRoutes = require("./routes/consultantRoutes");
 const profileRoutes = require("./routes/profileRoutes");
@@ -19,42 +21,27 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
 const Sentry = require("@sentry/node");
-require("./config/instruments");
 
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: [
-      "https://datamedconnect.com",
-      "https://admin.datamedconnect.com",
-      "http://localhost:3001",
-      "http://localhost:3002",
-    ],
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
+
+const corsOptions = {
+  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
+const io = socketIo(server, { cors: corsOptions });
 
 const PORT = 3000;
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static("public")); // Serve static files from 'public' folder
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: [
-      "https://datamedconnect.com",
-      "https://admin.datamedconnect.com",
-      "http://localhost:3001",
-      "http://localhost:3002",
-    ],
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors(corsOptions));
 app.use(loggingMiddleware);
 app.use(express.json());
 
@@ -71,9 +58,9 @@ app.use("/api/client", clientRoutes);
 app.use("/api/slots", slotRoutes);
 app.use("/api/super", superRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.get("/debug-sentry", function mainHandler(req, res) {
-  throw new Error("My first Sentry error!");
-});
+// app.get("/debug-sentry", function mainHandler(req, res) {
+//   throw new Error("My first Sentry error!");
+// });
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });

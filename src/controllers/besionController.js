@@ -61,7 +61,7 @@ const createbesion = async (req, res) => {
     // Trigger matching process asynchronously without awaiting
     console.log(
       "Lancement du processus de matching pour le besoin:",
-      newBesion._id
+      newBesion._id,
     );
     triggerMatching({ params: { id: newBesion._id } }, { json: () => {} }); // Mock res object since we don’t need a response here
 
@@ -157,7 +157,7 @@ const createbesionClient = async (req, res) => {
     // Trigger matching process asynchronously without awaiting
     console.log(
       "Lancement du processus de matching pour le besoin:",
-      newBesion._id
+      newBesion._id,
     );
     triggerMatching({ params: { id: newBesion._id } }, { json: () => {} }); // Mock res object since we don’t need a response here
 
@@ -170,7 +170,7 @@ const createbesionClient = async (req, res) => {
     console.error(
       "Erreur lors de la création du Besoin:",
       error.message,
-      error.stack
+      error.stack,
     );
     res
       .status(500)
@@ -249,9 +249,8 @@ const createScore = async (req, res) => {
       return res.status(400).json({ message: "ID de Consultant invalide" });
     }
     console.log("ID de Consultant:", consultantId);
-    const ConsultantProposer = await Consultant.findById(consultantId).populate(
-      "Profile"
-    );
+    const ConsultantProposer =
+      await Consultant.findById(consultantId).populate("Profile");
     if (!ConsultantProposer) {
       console.log("Consultant non trouvé");
       return res.status(404).json({ message: "Consultant non trouvé" });
@@ -302,7 +301,7 @@ const createScore = async (req, res) => {
                 exp.NomEntreprise || "N/A"
               } sur ${exp.Context || "N/A"} et ${
                 exp.Réalisation || "N/A"
-              } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`
+              } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`,
           )
           .join("; ")
       : "N/A"
@@ -355,7 +354,7 @@ async function callGrokAPI(prompt) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.GROK_API_KEY}`,
       },
-    }
+    },
   );
   console.log("Réponse brute de l'API Grok :", response.data);
 
@@ -515,17 +514,17 @@ const getAllConsultantsBesionByIdClient = async (req, res) => {
   - Expérience : ${consultant.Profile?.AnnéeExperience || "N/A"}
   - Expériences professionnelles : ${
     consultant.Profile?.ExperienceProfessionnelle.map(
-      (exp) => `${exp.TitrePoste} chez ${exp.NomEntreprise} : ${exp.Context}`
+      (exp) => `${exp.TitrePoste} chez ${exp.NomEntreprise} : ${exp.Context}`,
     ).join("; ") || "N/A"
   }
   - Formation : ${
     consultant.Profile?.Formation.map(
-      (form) => `${form.Diplome} de ${form.Ecole}`
+      (form) => `${form.Diplome} de ${form.Ecole}`,
     ).join(", ") || "N/A"
   }
   - Certifications : ${
     consultant.Profile?.Certifications.map(
-      (cert) => `${cert.Certif} de ${cert.Organisme}`
+      (cert) => `${cert.Certif} de ${cert.Organisme}`,
     ).join(", ") || "N/A"
   }
   `;
@@ -542,12 +541,12 @@ const getAllConsultantsBesionByIdClient = async (req, res) => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${process.env.GROK_API_KEY}`,
             },
-          }
+          },
         );
 
         console.log(
           `Réponse brute pour le consultant ${consultant._id} :`,
-          response.data
+          response.data,
         );
         const scoreText = response.data.choices[0].message.content.trim();
 
@@ -562,20 +561,20 @@ const getAllConsultantsBesionByIdClient = async (req, res) => {
           console.log(`Score du consultant ${consultant._id} : ${score}`);
         } else {
           console.log(
-            `Score ignoré (0 % ou invalide) pour le consultant ${consultant._id} : ${scoreText}`
+            `Score ignoré (0 % ou invalide) pour le consultant ${consultant._id} : ${scoreText}`,
           );
         }
       } catch (error) {
         console.error(
           `Erreur lors de l'évaluation du consultant ${consultant._id} :`,
-          error
+          error,
         );
       }
     });
 
     await Promise.all(evaluations);
     console.log(
-      `Évalué ${compatibilityResults.length} consultants avec des scores supérieurs à 0 %`
+      `Évalué ${compatibilityResults.length} consultants avec des scores supérieurs à 0 %`,
     );
 
     besion.consultantsScores = compatibilityResults;
@@ -584,7 +583,7 @@ const getAllConsultantsBesionByIdClient = async (req, res) => {
 
     const responseData = compatibilityResults.map((result) => {
       const consultant = consultants.find((c) =>
-        c._id.equals(result.consultantId)
+        c._id.equals(result.consultantId),
       );
       return {
         _id: consultant.Profile?._id || consultant._id,
@@ -689,12 +688,12 @@ const extractPdfData = async (req, res) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
         },
-      }
+      },
     );
 
     console.log(
       "Raw GrokAPI response:",
-      JSON.stringify(response.data, null, 2)
+      JSON.stringify(response.data, null, 2),
     );
     const messageContent = response.data.choices[0].message.content;
     console.log("GrokAPI message content:", messageContent);
@@ -713,7 +712,7 @@ const extractPdfData = async (req, res) => {
       const lines = messageContent.split("\n");
       lines.forEach((line) => {
         const match = line.match(
-          /^(poste|experience|mission|prixAchat|dateLimite):\s*(.+)$/i
+          /^(poste|experience|mission|prixAchat|dateLimite):\s*(.+)$/i,
         );
         if (match) {
           extractedData[match[1]] = match[2].trim();
@@ -801,7 +800,7 @@ const triggerMatching = async (req, res) => {
                 exp.NomEntreprise || "N/A"
               } sur ${exp.Context || "N/A"} et ${
                 exp.Réalisation || "N/A"
-              } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`
+              } avec ${exp.TechnicalEnv || "N/A"} (${exp.Date || "N/A"})`,
           )
           .join("; ")
       : "N/A"
@@ -823,12 +822,12 @@ const triggerMatching = async (req, res) => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${process.env.GROK_API_KEY}`,
             },
-          }
+          },
         );
 
         console.log(
           `Réponse brute pour le consultant ${consultant._id} :`,
-          response.data
+          response.data,
         );
         const scoreText = response.data.choices[0].message.content.trim();
 
@@ -843,20 +842,20 @@ const triggerMatching = async (req, res) => {
           console.log(`Score du consultant ${consultant._id} : ${score}`);
         } else {
           console.log(
-            `Score ignoré (invalide) pour le consultant ${consultant._id} : ${scoreText}`
+            `Score ignoré (invalide) pour le consultant ${consultant._id} : ${scoreText}`,
           );
         }
       } catch (error) {
         console.error(
           `Erreur lors de l'évaluation du consultant ${consultant._id} :`,
-          error.message
+          error.message,
         );
       }
     });
 
     await Promise.all(evaluations);
     console.log(
-      `Évalué ${compatibilityResults.length} consultants avec des scores valides`
+      `Évalué ${compatibilityResults.length} consultants avec des scores valides`,
     );
 
     // Re-fetch to avoid version conflicts
@@ -948,9 +947,8 @@ const compareConsultant = async (req, res) => {
 
     // Fetch consultant with populated profile
     console.log("Step 4: Fetching consultant with ID:", consultantId);
-    const consultant = await Consultant.findById(consultantId).populate(
-      "Profile"
-    );
+    const consultant =
+      await Consultant.findById(consultantId).populate("Profile");
     if (!consultant || !consultant.Profile) {
       console.log("Step 4.1: Consultant or profile not found");
       return res.status(404).json({ error: "Consultant or profile not found" });
@@ -1000,7 +998,7 @@ Return the response in the following JSON format:
     // Call Grok API
     console.log(
       "Step 7: Calling Grok API with key:",
-      process.env.GROK_API_KEY ? "Key present" : "Key missing"
+      process.env.GROK_API_KEY ? "Key present" : "Key missing",
     );
     let grokResponse;
     try {
@@ -1015,11 +1013,11 @@ Return the response in the following JSON format:
             Authorization: `Bearer ${process.env.GROK_API_KEY}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       console.log(
         "Step 7.1: Grok API response received:",
-        JSON.stringify(grokResponse.data, null, 2)
+        JSON.stringify(grokResponse.data, null, 2),
       );
     } catch (apiError) {
       console.error("Step 7.2: Grok API call failed:", {
@@ -1049,14 +1047,12 @@ Return the response in the following JSON format:
     } catch (parseError) {
       console.error(
         "Step 8.4: Failed to parse Grok API response:",
-        parseError.message
+        parseError.message,
       );
-      return res
-        .status(500)
-        .json({
-          error: "Failed to parse Grok API response",
-          details: parseError.message,
-        });
+      return res.status(500).json({
+        error: "Failed to parse Grok API response",
+        details: parseError.message,
+      });
     }
 
     const { score, paragraphe } = responseData;
@@ -1090,7 +1086,7 @@ Return the response in the following JSON format:
           },
         },
       },
-      { new: true }
+      { new: true },
     );
     console.log("Step 10.1: Besion updated successfully:", updatedBesion);
 

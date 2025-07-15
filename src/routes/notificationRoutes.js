@@ -7,7 +7,7 @@ router.get("/", authenticate, notificationController.getNotifications);
 router.put(
   "/:id/read",
   authenticate,
-  notificationController.markNotificationAsRead
+  notificationController.markNotificationAsRead,
 );
 
 module.exports = router;

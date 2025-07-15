@@ -10,7 +10,7 @@ router.get("/:id/Name", consultantController.getConsultantName);
 router.put("/:id/availability", consultantController.updatedAvailability);
 router.post(
   "/verify-availability-token",
-  consultantController.verifyAvailabilityToken
+  consultantController.verifyAvailabilityToken,
 );
 
 module.exports = router;

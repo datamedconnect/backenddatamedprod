@@ -42,7 +42,7 @@ const processPDF = async (req, res) => {
     // Function to clean the string: remove comments and optionally handle unquoted keys
     const cleanJsonString = (str) => {
       // Remove single-line comments (// to end of line)
-      let cleaned = str.replace(/\/\/.*$/gm, '').trim();
+      let cleaned = str.replace(/\/\/.*$/gm, "").trim();
 
       // Optional: Add quotes to unquoted property names (if Grok returns them)
       // This regex looks for lines starting with a word followed by a colon
@@ -67,14 +67,13 @@ const processPDF = async (req, res) => {
       ...cvData,
       consultantId,
     };
-    const existingProfile = await profileService.getProfileByConsultantId(
-      consultantId
-    );
+    const existingProfile =
+      await profileService.getProfileByConsultantId(consultantId);
     let profile;
     if (existingProfile) {
       profile = await profileService.updateProfile(
         existingProfile._id,
-        profileData
+        profileData,
       );
     } else {
       profile = await profileService.createProfile(profileData);
@@ -101,9 +100,13 @@ const getProfile = async (req, res) => {
       return res.status(404).json({ message: "Profile not found" });
     }
 
-    const consultant = await consultantService.getConsultantByProfileId(req.params.id);
+    const consultant = await consultantService.getConsultantByProfileId(
+      req.params.id,
+    );
     if (!consultant) {
-      return res.status(404).json({ message: "Consultant not found for this profile" });
+      return res
+        .status(404)
+        .json({ message: "Consultant not found for this profile" });
     }
 
     // Explicitly ensure all fields, including Location, are returned
@@ -137,11 +140,11 @@ const updateProfile = async (req, res) => {
 
     const updatedProfile = await profileService.updateProfile(
       profileId,
-      profile
+      profile,
     );
     const updatedConsultant = await consultantService.updateConsultant(
       consultant._id,
-      consultant
+      consultant,
     );
 
     res
@@ -186,4 +189,9 @@ const uploadProfilePicture = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, processPDF, updateProfile, uploadProfilePicture };
+module.exports = {
+  getProfile,
+  processPDF,
+  updateProfile,
+  uploadProfilePicture,
+};
