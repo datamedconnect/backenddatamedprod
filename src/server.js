@@ -5,6 +5,8 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
+const helmet = require("helmet"); // Added for secure headers
+const rateLimit = require("express-rate-limit"); // Added for rate limiting
 const connectDB = require("./database/connection");
 const consultantRoutes = require("./routes/consultantRoutes");
 const profileRoutes = require("./routes/profileRoutes");
@@ -25,6 +27,8 @@ const Sentry = require("@sentry/node");
 connectDB();
 
 const app = express();
+app.use(helmet()); // Added: Secure headers (e.g., CSP, XSS protection)
+
 const server = http.createServer(app);
 
 const corsOptions = {
@@ -35,6 +39,14 @@ const corsOptions = {
 };
 
 const io = socketIo(server, { cors: corsOptions });
+
+// Rate limiting middleware (added)
+const limiter = rateLimit({
+  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000, // 15 minutes
+  max: process.env.RATE_LIMIT_MAX || 100, // Limit each IP to 100 requests per window
+  message: "Too many requests from this IP, please try again later.",
+});
+app.use(limiter); // Apply to all routes (or specific ones if preferred)
 
 const PORT = 3000;
 app.set("view engine", "ejs");

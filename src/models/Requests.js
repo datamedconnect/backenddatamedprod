@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitize = require('mongoose-sanitize');
 
 const RequestsSchema = new mongoose.Schema(
   {
@@ -10,5 +11,7 @@ const RequestsSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+RequestsSchema.plugin(sanitize);
 
 module.exports = mongoose.model("Requests", RequestsSchema);

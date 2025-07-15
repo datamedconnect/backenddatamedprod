@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitize = require('mongoose-sanitize');
 
 const savedConsultantSchema = new mongoose.Schema({
   client: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -10,5 +11,7 @@ const savedConsultantSchema = new mongoose.Schema({
 });
 
 savedConsultantSchema.index({ client: 1, consultant: 1 }, { unique: true });
+
+savedConsultantSchema.plugin(sanitize);
 
 module.exports = mongoose.model("SavedConsultant", savedConsultantSchema);

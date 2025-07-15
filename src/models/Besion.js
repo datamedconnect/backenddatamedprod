@@ -1,22 +1,67 @@
-const { z } = require("zod");
+const mongoose = require("mongoose");
+const Consultant = require("./Consultant");
+const User = require("./User");
+const sanitize = require('mongoose-sanitize');
 
-const BesionSchema = z.object({
-  createdBy: z.string(), // ObjectId as string
-  nomClient: z.string().optional(),
-  dateLimite: z.coerce.date(),
-  poste: z.string(),
-  experience: z.number(),
-  mission: z.string(),
-  prixAchat: z.number(),
-  status: z.enum(["Ouvert", "Fermé"]).default("Ouvert"),
-  consultantsScores: z
-    .array(
-      z.object({
-        consultantId: z.string(), // ObjectId as string
-        score: z.number(),
-      }),
-    )
-    .optional(),
-});
+const besionSchema = new mongoose.Schema(
+  {
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    nomClient: {
+      type: String,
+      required: false,
+    },
+    dateLimite: {
+      type: Date,
+      required: true,
+    },
+    poste: {
+      type: String,
+      required: true,
+    },
+    experience: {
+      type: Number,
+      required: true,
+    },
+    mission: {
+      type: String,
+      required: true,
+    },
+    prixAchat: {
+      type: Number,
+      required: true, // Added to store purchase price
+    },
+    status: {
+      type: String,
+      required: true,
+      enum: ["Ouvert", "Fermé"],
+      default: "Ouvert",
+    },
+    consultantsScores: {
+      type: [
+        {
+          consultantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Consultant",
+            required: true,
+          },
+          score: {
+            type: Number,
+            required: true,
+          },
+        },
+      ],
+      required: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-module.exports = BesionSchema;
+besionSchema.plugin(sanitize);
+
+module.exports = mongoose.model("Besion", besionSchema);

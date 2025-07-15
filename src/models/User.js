@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const sanitize = require('mongoose-sanitize');
+
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
@@ -38,5 +40,8 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
+
+userSchema.plugin(sanitize);
+
 
 module.exports = mongoose.model("User", userSchema);

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitize = require('mongoose-sanitize');
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -20,5 +21,7 @@ const notificationSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+notificationSchema.plugin(sanitize);
 
 module.exports = mongoose.model("Notification", notificationSchema);

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitize = require('mongoose-sanitize');
 
 const profileConsultantSchema = new mongoose.Schema(
   {
@@ -44,5 +45,7 @@ const profileConsultantSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+profileConsultantSchema.plugin(sanitize);
 
 module.exports = mongoose.model("ProfileConsultant", profileConsultantSchema);

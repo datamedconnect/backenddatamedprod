@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitize = require('mongoose-sanitize');
 
 const consultantSchema = new mongoose.Schema(
   {
@@ -86,5 +87,7 @@ consultantSchema.pre("findOneAndUpdate", function (next) {
   }
   next();
 });
+
+consultantSchema.plugin(sanitize);
 
 module.exports = mongoose.model("Consultant", consultantSchema);

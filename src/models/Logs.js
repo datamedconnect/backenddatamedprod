@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitize = require('mongoose-sanitize');
 
 const logsSchema = new mongoose.Schema(
   {
@@ -79,5 +80,7 @@ const logsSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+logsSchema.plugin(sanitize);
 
 module.exports = mongoose.model("Logs", logsSchema);

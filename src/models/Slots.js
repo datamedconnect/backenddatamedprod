@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Consultant = require("./Consultant");
 const User = require("./User");
+const sanitize = require('mongoose-sanitize');
+
 
 const slotsSchema = new mongoose.Schema(
   {
@@ -99,5 +101,7 @@ const slotsSchema = new mongoose.Schema(
 function arrayLimit(val) {
   return val.length <= 3;
 }
+
+slotsSchema.plugin(sanitize);
 
 module.exports = mongoose.model("Slots", slotsSchema);
