@@ -18,6 +18,8 @@ const downloadRoutes = require("./routes/downloadRoutes");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
+const Sentry = require("@sentry/node");
+require("./config/instruments");
 
 connectDB();
 
@@ -73,6 +75,9 @@ app.use("/api/notifications", notificationRoutes);
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
+
+// Setup Sentry Express error handler after all routes
+Sentry.setupExpressErrorHandler(app);
 
 io.on("connection", (socket) => {
   socket.on("join", (userId) => {

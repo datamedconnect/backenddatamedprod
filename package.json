@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/datamedconnect/backenddatamedprod#readme",
   "dependencies": {
+    "@sentry/node": "^9.38.0",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "connect-mongo": "^5.1.0",
