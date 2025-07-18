@@ -42,6 +42,7 @@ const logsSchema = new mongoose.Schema(
         "LECTURE_CONSULTANT_BESOIN",
         "LECTURE_CONSULTANT_CORRESPONDANT",
         "CRÉATION_SCORE",
+        "LECTURE_DEMO",
       ],
     },
     user: {

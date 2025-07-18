@@ -164,7 +164,10 @@ const actionMappings = {
     actionType: "CRÉATION_UTILISATEUR",
     entityType: "User",
   },
-  "POST:/api/auth/login": { actionType: "CONNEXION", entityType: "User" },
+  "POST:/api/auth/login": {
+    actionType: "CONNEXION",
+    entityType: "User",
+  },
 
   // Client Routes
   "GET:/api/client/rechercher": {
@@ -336,11 +339,41 @@ const loggingMiddleware = (req, res, next) => {
   };
 
   onFinished(res, async (err) => {
-    if (!req.user || !req.user.id) {
+    let userId = req.user ? req.user.id : null;
+
+    // Special handling for auth routes where req.user may not be set yet
+    if (!userId && (actionType === "CONNEXION" || actionType === "CRÉATION_UTILISATEUR")) {
+      if (res.statusCode < 400 && responseData) {
+        // Attempt to extract userId from common response structures
+        if (responseData._id) {
+          userId = responseData._id.toString();
+        } else if (responseData.user && responseData.user._id) {
+          userId = responseData.user._id.toString();
+        } else if (responseData.id) {
+          userId = responseData.id.toString();
+        } else if (responseData.user && responseData.user.id) {
+          userId = responseData.user.id.toString();
+        } else {
+          // Fallback: query the user by email if available
+          if (req.body.email) {
+            try {
+              const user = await User.findOne({ email: req.body.email }).select('_id');
+              if (user) {
+                userId = user._id.toString();
+              }
+            } catch (queryError) {
+              console.error("Error querying user for logging:", queryError);
+            }
+          }
+        }
+      }
+    }
+
+    if (!userId) {
       console.log("No user or user ID, not logging");
       return;
     }
-    const userId = req.user.id;
+
     const metadata = {};
     let description = "";
     let relatedEntity = null;
@@ -389,26 +422,26 @@ const loggingMiddleware = (req, res, next) => {
         switch (relatedEntity.entityType) {
           case "Slots":
             entityDoc = await Slot.findById(relatedEntity.entityId).select(
-              "exchangeNumber",
+              "exchangeNumber"
             );
             relatedEntity.entityName =
               entityDoc?.exchangeNumber || "Créneau inconnu";
             break;
           case "Consultant":
             entityDoc = await Consultant.findById(
-              relatedEntity.entityId,
+              relatedEntity.entityId
             ).select("Email");
             relatedEntity.entityName = entityDoc?.Email || "Consultant inconnu";
             break;
           case "Besion":
             entityDoc = await Besion.findById(relatedEntity.entityId).select(
-              "nomClient",
+              "nomClient"
             );
             relatedEntity.entityName = entityDoc?.nomClient || "Besoin inconnu";
             break;
           case "User":
             entityDoc = await User.findById(relatedEntity.entityId).select(
-              "email",
+              "email"
             );
             relatedEntity.entityName =
               entityDoc?.email || "Utilisateur inconnu";
@@ -425,7 +458,7 @@ const loggingMiddleware = (req, res, next) => {
       } catch (fetchError) {
         console.error(
           "Erreur lors de la récupération du nom de l'entité:",
-          fetchError,
+          fetchError
         );
         relatedEntity.entityName = "Erreur de récupération";
       }
