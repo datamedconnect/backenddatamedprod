@@ -44,6 +44,7 @@ const logsSchema = new mongoose.Schema(
         "CRÉATION_SCORE",
         "LECTURE_DEMO",
         "LECTURE_UTILISATEUR",
+        "LECTURE_CHIFFRES"
       ],
     },
     user: {
