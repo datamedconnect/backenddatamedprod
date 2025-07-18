@@ -43,6 +43,7 @@ const logsSchema = new mongoose.Schema(
         "LECTURE_CONSULTANT_CORRESPONDANT",
         "CRÉATION_SCORE",
         "LECTURE_DEMO",
+        "LECTURE_UTILISATEUR",
       ],
     },
     user: {
