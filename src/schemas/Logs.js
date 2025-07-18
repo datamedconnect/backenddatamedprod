@@ -37,6 +37,7 @@ const LogsSchema = z.object({
     "LECTURE_CONSULTANT_BESOIN",
     "LECTURE_CONSULTANT_CORRESPONDANT",
     "CRÉATION_SCORE",
+    "LECTURE_CHIFFRES",
   ]),
   user: z.string(), // ObjectId as string
   description: z.string().optional().default(""),
