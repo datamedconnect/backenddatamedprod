@@ -32,7 +32,12 @@ app.use(helmet()); // Added: Secure headers (e.g., CSP, XSS protection)
 const server = http.createServer(app);
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : '*',
+  origin: [
+    'https://datamedconnect.com',
+    'https://admin.datamedconnect.com',
+    'http://localhost:3001',
+    'http://localhost:3002'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
