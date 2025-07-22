@@ -45,12 +45,12 @@ const corsOptions = {
 
 const io = socketIo(server, { cors: corsOptions });
 
-const limiter = rateLimit({
-  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
-  max: process.env.RATE_LIMIT_MAX || 500, // Increase to 500 or higher
-  message: "Too many requests from this IP, please try again later.",
-});
-app.use(limiter); // Apply to all routes (or specific ones if preferred)
+// const limiter = rateLimit({
+//   windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
+//   max: process.env.RATE_LIMIT_MAX || 500, // Increase to 500 or higher
+//   message: "Too many requests from this IP, please try again later.",
+// });
+// app.use(limiter); // Apply to all routes (or specific ones if preferred)
 
 const PORT = 3000;
 app.set("view engine", "ejs");
