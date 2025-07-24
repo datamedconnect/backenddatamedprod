@@ -1,18 +1,37 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const authenticate = (req, res, next) => {
+
+const authenticate = async (req, res, next) => { // Make async for DB fetch
   const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
-    return res.status(401).json({ message: "No token provided" });
+    return res.status(401).json({ message: "Aucun token fourni" }); // French message
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: decoded.id }; // Only id is set from token
-    console.log("User authenticated:", req.user.id);
+    const user = await User.findById(decoded.id).select('email role'); // Fetch email/role
+    if (!user) {
+      return res.status(401).json({ message: "Utilisateur non trouvé" });
+    }
+    req.user = { id: user._id, email: user.email, role: user.role };
+
+    // Set Sentry user context
+    Sentry.setUser({
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role, // Custom prop
+    });
+    Sentry.addBreadcrumb({
+      message: `Utilisateur authentifié: ${req.user.email}`,
+      level: 'info',
+    });
+
+    console.log("Utilisateur authentifié:", req.user.id);
     next();
   } catch (error) {
-    console.error("Token verification failed:", error);
-    res.status(401).json({ message: "Invalid token" });
+    console.error("Échec de vérification du token:", error);
+    // Capture to Sentry with French tag
+    Sentry.captureException(error, { tags: { type_erreur: 'Authentification' } });
+    res.status(401).json({ message: "Token invalide" });
   }
 };
 

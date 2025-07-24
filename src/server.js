@@ -23,6 +23,7 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
 const Sentry = require("@sentry/node");
+const { sentryErrorHandler } = require('./middleware/sentryMiddleware');
 
 connectDB();
 
@@ -32,12 +33,7 @@ app.use(helmet()); // Added: Secure headers (e.g., CSP, XSS protection)
 const server = http.createServer(app);
 
 const corsOptions = {
-  origin: [
-    'https://datamedconnect.com',
-    'https://admin.datamedconnect.com',
-    'http://localhost:3001',
-    'http://localhost:3002'
-  ],
+  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -45,9 +41,10 @@ const corsOptions = {
 
 const io = socketIo(server, { cors: corsOptions });
 
+// // Rate limiting middleware (added)
 // const limiter = rateLimit({
-//   windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
-//   max: process.env.RATE_LIMIT_MAX || 500, // Increase to 500 or higher
+//   windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000, // 15 minutes
+//   max: process.env.RATE_LIMIT_MAX || 100, // Limit each IP to 100 requests per window
 //   message: "Too many requests from this IP, please try again later.",
 // });
 // app.use(limiter); // Apply to all routes (or specific ones if preferred)
@@ -77,6 +74,7 @@ app.use("/api/notifications", notificationRoutes);
 // app.get("/debug-sentry", function mainHandler(req, res) {
 //   throw new Error("My first Sentry error!");
 // });
+app.use(sentryErrorHandler);
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });

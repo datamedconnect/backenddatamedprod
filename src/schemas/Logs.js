@@ -1,3 +1,4 @@
+// Improved LogsSchema (with full enum synced from Mongoose)
 const { z } = require("zod");
 
 const LogsSchema = z.object({
@@ -37,20 +38,25 @@ const LogsSchema = z.object({
     "LECTURE_CONSULTANT_BESOIN",
     "LECTURE_CONSULTANT_CORRESPONDANT",
     "CRÉATION_SCORE",
+    "LECTURE_DEMO",
+    "LECTURE_UTILISATEUR",
     "LECTURE_CHIFFRES",
+    "LECTURE_TOUS_BESOINS",
+    "LECTURE_TOUS_CRENEAUX",
+    "LECTURE_TOUS_CONSULTANTS_ENREGISTRÉS",
+    "LECTURE_TOUS_UTILISATEURS",
+    "LECTURE_TOUS_SLOTS",
+    "LECTURE_TOUS_CONSULTANTS_CRENEAUX",
+    "LECTURE_TOUS_CONSULTANTS_BESOINS",
   ]),
-  user: z.string(), // ObjectId as string
-  description: z.string().optional().default(""),
-  relatedEntity: z
-    .object({
-      entityType: z
-        .enum(["Slots", "Consultant", "Besion", "User", "SavedConsultant"])
-        .optional(),
-      entityId: z.string().optional(), // ObjectId as string
-      entityName: z.string().optional(),
-    })
-    .optional(),
-  metadata: z.record(z.string()).optional().default({}),
-});
+  user: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId"),
+  description: z.string().default(""),
+  relatedEntity: z.object({
+    entityType: z.enum(["Slots", "Consultant", "Besion", "User", "SavedConsultant"]).optional(),
+    entityId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId").optional(),
+    entityName: z.string().optional(),
+  }).optional(),
+  metadata: z.record(z.string()).default({}),
+}).strict();
 
 module.exports = LogsSchema;
