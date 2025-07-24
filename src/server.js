@@ -1,6 +1,5 @@
 require("./config/instruments");
 require("dotenv").config();
-
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
@@ -34,9 +33,7 @@ const server = http.createServer(app);
 const corsOptions = {
   origin: [
     "https://datamedconnect.com",
-    "https://admin.datamedconnect.com",
-    "http://localhost:3001",
-    "http://localhost:3002"
+    "https://datamedconnectadmin-1037995697399.europe-west1.run.app",
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
