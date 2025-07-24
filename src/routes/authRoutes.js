@@ -4,8 +4,6 @@ const authController = require("../controllers/authController");
 const { authenticate } = require("../middleware/auth");
 const { sentryMiddleware } = require("../middleware/sentryMiddleware"); 
 
-router.use(sentryMiddleware);
-
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 router.post("/verify-code", authController.verifyCode); 

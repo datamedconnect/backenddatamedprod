@@ -1,5 +1,5 @@
 require("./config/instruments");
-require('dotenv').config();
+require("dotenv").config();
 
 const express = require("express");
 const http = require("http");
@@ -23,7 +23,6 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
 const Sentry = require("@sentry/node");
-const { sentryErrorHandler } = require('./middleware/sentryMiddleware');
 
 connectDB();
 
@@ -33,9 +32,9 @@ app.use(helmet()); // Added: Secure headers (e.g., CSP, XSS protection)
 const server = http.createServer(app);
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",") : "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 
@@ -74,7 +73,6 @@ app.use("/api/notifications", notificationRoutes);
 // app.get("/debug-sentry", function mainHandler(req, res) {
 //   throw new Error("My first Sentry error!");
 // });
-app.use(sentryErrorHandler);
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
