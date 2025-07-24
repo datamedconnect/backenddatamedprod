@@ -32,8 +32,8 @@ const server = http.createServer(app);
 
 const corsOptions = {
   origin: [
-    "https://datamedconnect.com",
-    "https://datamedconnectadmin-1037995697399.europe-west1.run.app",
+    'https://datamedconnect-1037995697399.europe-west1.run.app',
+    'https://datamedconnectadmin-1037995697399.europe-west1.run.app'
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
