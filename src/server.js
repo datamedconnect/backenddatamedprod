@@ -62,6 +62,12 @@ app.use(cors(corsOptions));
 app.use(loggingMiddleware);
 app.use(express.json());
 
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  next();
+});
 // Routes
 app.use("/api/consultants", consultantRoutes);
 app.use("/api/download", downloadRoutes);
