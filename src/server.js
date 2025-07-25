@@ -53,7 +53,7 @@ const io = socketIo(server, { cors: corsOptions });
 // });
 // app.use(limiter); // Apply to all routes (or specific ones if preferred)
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static("public")); // Serve static files from 'public' folder
