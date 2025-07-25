@@ -35,13 +35,14 @@ const corsOptions = {
     "https://datamedconnect.com",
     "https://admin.datamedconnect.com",
     "https://datamedconnect-1037995697399.europe-west1.run.app",
-    "https://datamedconnectadmin-1037995697399.europe-west1.run.app"
+    "https://datamedconnectadmin-1037995697399.europe-west1.run.app",
+    // Add "http://localhost:3000" for local development if needed
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
+  optionsSuccessStatus: 204, // Ensure preflight requests return 204
 };
-
 const io = socketIo(server, { cors: corsOptions });
 
 // // Rate limiting middleware (added)
