@@ -4,8 +4,8 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
-const helmet = require("helmet"); // Added for secure headers
-const rateLimit = require("express-rate-limit"); // Added for rate limiting
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const connectDB = require("./database/connection");
 const consultantRoutes = require("./routes/consultantRoutes");
 const profileRoutes = require("./routes/profileRoutes");
@@ -26,37 +26,61 @@ const Sentry = require("@sentry/node");
 connectDB();
 
 const app = express();
-app.use(helmet()); // Added: Secure headers (e.g., CSP, XSS protection)
+app.use(helmet());
 
 const server = http.createServer(app);
 
+const allowedOrigins = [
+  "https://datamedconnect.com",
+  "https://admin.datamedconnect.com",
+  "https://datamedconnect-1037995697399.europe-west1.run.app",
+  "https://datamedconnectadmin-1037995697399.europe-west1.run.app",
+  ...(process.env.NODE_ENV === "development" ? ["http://localhost:3000"] : []),
+];
+
 const corsOptions = {
-  origin: [
-    "https://datamedconnect.com",
-    "https://admin.datamedconnect.com",
-    "https://datamedconnect-1037995697399.europe-west1.run.app",
-    "https://datamedconnectadmin-1037995697399.europe-west1.run.app",
-    // Add "http://localhost:3000" for local development if needed
-  ],
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(new Error("No origin header provided. Access denied."), false);
+    }
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"), false);
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
-  optionsSuccessStatus: 204, // Ensure preflight requests return 204
+  optionsSuccessStatus: 204,
 };
+
 const io = socketIo(server, { cors: corsOptions });
 
-// // Rate limiting middleware (added)
+// // Rate limiting middleware
 // const limiter = rateLimit({
 //   windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000, // 15 minutes
-//   max: process.env.RATE_LIMIT_MAX || 100, // Limit each IP to 100 requests per window
+//   max: process.env.RATE_LIMIT_MAX || 100, // 100 requests per window
 //   message: "Too many requests from this IP, please try again later.",
 // });
-// app.use(limiter); // Apply to all routes (or specific ones if preferred)
+// app.use(limiter);
+
+// Custom origin validation middleware
+app.use((req, res, next) => {
+  const origin = req.get("Origin");
+  if (!origin) {
+    return res.status(403).json({ error: "No origin header provided. Access denied." });
+  }
+  if (!allowedOrigins.includes(origin)) {
+    return res.status(403).json({ error: "Unauthorized origin. Access denied." });
+  }
+  next();
+});
 
 const PORT = process.env.PORT || 3000;
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-app.use(express.static("public")); // Serve static files from 'public' folder
+app.use(express.static("public"));
 app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use(loggingMiddleware);
@@ -68,6 +92,7 @@ app.use((req, res, next) => {
   }
   next();
 });
+
 // Routes
 app.use("/api/consultants", consultantRoutes);
 app.use("/api/download", downloadRoutes);
@@ -81,17 +106,11 @@ app.use("/api/client", clientRoutes);
 app.use("/api/slots", slotRoutes);
 app.use("/api/super", superRoutes);
 app.use("/api/notifications", notificationRoutes);
-// app.get("/debug-sentry", function mainHandler(req, res) {
-//   throw new Error("My first Sentry error!");
-// });
-
-
 
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-// Setup Sentry Express error handler after all routes
 Sentry.setupExpressErrorHandler(app);
 
 io.on("connection", (socket) => {
