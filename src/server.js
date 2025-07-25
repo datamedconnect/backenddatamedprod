@@ -84,6 +84,9 @@ app.use("/api/notifications", notificationRoutes);
 // app.get("/debug-sentry", function mainHandler(req, res) {
 //   throw new Error("My first Sentry error!");
 // });
+
+
+
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
